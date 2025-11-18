@@ -30,6 +30,7 @@ import {
   LuPencil,
   LuTrash2,
   LuLogOut,
+  LuInfo,
 } from "react-icons/lu";
 import {
   AdminEmployee,
@@ -41,13 +42,15 @@ import {
   useDeleteEmployee,
   useResignEmployee,
 } from "@/hooks/use-admin";
+import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
-import { Badge } from "../../../../components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { CreateEmployeeDialog } from "./create-employee-dialog";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { ViewEmployeeDialog } from "./view-employee-dialog";
 
 const AdminEmployeesPage = () => {
+  const { user, isLoading: isAuthLoading, isError: isAuthError } = useAuth();
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<AdminEmployee | null>(
     null,
@@ -71,11 +74,17 @@ const AdminEmployeesPage = () => {
     sortOrder: "desc",
   };
 
+  const canViewEmployees = !!user?.permissions?.includes("admin.employees.view");
+  const canManageEmployees = !!user?.permissions?.includes("admin.employees.manage");
+
   const {
     data: employeesData,
     isLoading,
     error,
-  } = useEmployees(queryParams);
+  } = useEmployees(
+    queryParams,
+    !isAuthLoading && !!user && canViewEmployees,
+  );
   const deleteEmployeeMutation = useDeleteEmployee();
   const resignEmployeeMutation = useResignEmployee();
 
@@ -199,37 +208,79 @@ const AdminEmployeesPage = () => {
                 <LuEye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setEditingEmployee(employee)}>
-                <LuPencil className="mr-2 h-4 w-4" />
-                Edit Employee
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {employee.status !== "RESIGNED" && (
-                <DropdownMenuItem
-                  onClick={() =>
-                    resignEmployeeMutation.mutate({ id: employee.id, data: {} })
-                  }
-                  disabled={resignEmployeeMutation.isPending}
-                >
-                  <LuLogOut className="mr-2 h-4 w-4" />
-                  Mark Resigned
-                </DropdownMenuItem>
+              {canManageEmployees && (
+                <>
+                  <DropdownMenuItem onClick={() => setEditingEmployee(employee)}>
+                    <LuPencil className="mr-2 h-4 w-4" />
+                    Edit Employee
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {employee.status !== "RESIGNED" && (
+                    <DropdownMenuItem
+                      onClick={() =>
+                        resignEmployeeMutation.mutate({ id: employee.id, data: {} })
+                      }
+                      disabled={resignEmployeeMutation.isPending}
+                    >
+                      <LuLogOut className="mr-2 h-4 w-4" />
+                      Mark Resigned
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => deleteEmployeeMutation.mutate(employee.id)}
+                    disabled={deleteEmployeeMutation.isPending}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <LuTrash2 className="mr-2 h-4 w-4" />
+                    Delete Employee
+                  </DropdownMenuItem>
+                </>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => deleteEmployeeMutation.mutate(employee.id)}
-                disabled={deleteEmployeeMutation.isPending}
-                className="text-destructive focus:text-destructive"
-              >
-                <LuTrash2 className="mr-2 h-4 w-4" />
-                Delete Employee
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
     },
   ];
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
+  if (isAuthError || !user) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <LuInfo className="mx-auto h-12 w-12 text-destructive" />
+          <p className="mt-4 text-lg font-medium text-destructive">
+            Failed to load user information
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Please refresh the page or try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canViewEmployees) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <LuInfo className="mx-auto h-12 w-12 text-muted-foreground" />
+          <p className="mt-4 text-lg font-medium">Access denied</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            You do not have permission to view employees.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -251,10 +302,12 @@ const AdminEmployeesPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-medium">Employees Management</h1>
-        <Button onClick={() => setOpenCreateDialog(true)}>
-          <LuUserPlus className="mr-2 h-4 w-4" />
-          Add Employee
-        </Button>
+        {canManageEmployees && (
+          <Button onClick={() => setOpenCreateDialog(true)}>
+            <LuUserPlus className="mr-2 h-4 w-4" />
+            Add Employee
+          </Button>
+        )}
       </div>
 
       <div className="rounded-xl border bg-card p-6">

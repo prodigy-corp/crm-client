@@ -8,21 +8,33 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
+type SubmenuItem = {
+  id: number | string;
+  title: string;
+  url: string;
+};
+
 type MenuCollapsibleProps = {
   icon: React.ReactNode;
   title: string;
   baseUrl: string;
   children: React.ReactNode;
+  submenu?: SubmenuItem[];
 };
 
 const MenuCollapsible = ({
   icon,
   title,
   baseUrl,
+  submenu = [],
   children,
 }: MenuCollapsibleProps) => {
   const pathName = usePathname();
-  const active = pathName.startsWith(baseUrl);
+  const matchesSubmenu = submenu.some((item) =>
+    pathName === item.url || pathName.startsWith(`${item.url}/`)
+  );
+  const matchesBase = pathName === baseUrl;
+  const active = matchesBase || matchesSubmenu;
   const [open, setOpen] = useState(active);
 
   return (

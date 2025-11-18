@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -21,8 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import Spinner from "@/components/ui/spinner";
-import { useCreateBlog } from "@/hooks/use-admin";
-import type { CreateBlogDto } from "@/lib/api/admin";
+import { useBlog, useUpdateBlog } from "@/hooks/use-admin";
+import type { UpdateBlogDto } from "@/lib/api/admin";
 import {
   LuArrowLeft,
   LuSave,
@@ -34,7 +33,15 @@ import {
 } from "react-icons/lu";
 
 // Dynamically import RichTextEditor
-const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
+const RichTextEditor = dynamic(() => import("@/components/editor/rich-text-editor"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-96 items-center justify-center rounded-md border">
+      <Spinner className="h-6 w-6" />
+    </div>
+  ),
+});
+
 // Validation schema
 const blogSchema = yup.object({
   title: yup.string().required("Title is required").min(3, "Title must be at least 3 characters"),
@@ -54,9 +61,13 @@ const blogSchema = yup.object({
 
 type BlogFormData = yup.InferType<typeof blogSchema>;
 
-const CreateBlogPage = () => {
+const EditBlogPage = () => {
   const router = useRouter();
-  const createBlogMutation = useCreateBlog();
+  const params = useParams();
+  const blogId = params.id as string;
+  
+  const { data: blog, isLoading: isFetching } = useBlog(blogId);
+  const updateBlogMutation = useUpdateBlog();
   const [activeTab, setActiveTab] = useState<"content" | "seo" | "settings">("content");
 
   const form = useForm<BlogFormData>({
@@ -78,36 +89,41 @@ const CreateBlogPage = () => {
     },
   });
 
-  // Auto-generate slug from title
-  const handleTitleChange = (title: string) => {
-    form.setValue("title", title);
-    if (!form.getValues("slug")) {
-      const slug = title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-      form.setValue("slug", slug);
+  // Load blog data into form
+  useEffect(() => {
+    if (blog) {
+      form.reset({
+        title: blog.title || "",
+        slug: blog.slug || "",
+        excerpt: blog.excerpt || "",
+        content: blog.content || "",
+        featuredImage: blog.featuredImage || "",
+        imageAlt: blog.imageAlt || "",
+        metaTitle: blog.metaTitle || "",
+        metaDescription: blog.metaDescription || "",
+        focusKeyword: blog.focusKeyword || "",
+        status: blog.status || "DRAFT",
+        isFeatured: blog.isFeatured || false,
+        allowComments: blog.allowComments !== false,
+        isIndexable: blog.isIndexable !== false,
+      });
     }
-  };
-
-    // Jodit editor config
-  const joditConfig = useMemo(
-    () => ({ readonly: false, placeholder: "Write your blog content" }),
-    []
-  );
-
+  }, [blog, form]);
 
   const onSubmit = async (data: BlogFormData) => {
-    console.log("Submitting blog data:", data);
-    createBlogMutation.mutate(data as CreateBlogDto, {
-      onSuccess: () => {
-        console.log("Blog created successfully");
-        router.push("/dashboard/admin/blogs");
-      },
-      onError: (error: any) => {
-        console.error("Failed to create blog:", error);
-      },
-    });
+    console.log("Updating blog data:", data);
+    updateBlogMutation.mutate(
+      { id: blogId, data: data as UpdateBlogDto },
+      {
+        onSuccess: () => {
+          console.log("Blog updated successfully");
+          router.push("/admin/dashboard/blogs");
+        },
+        onError: (error: any) => {
+          console.error("Failed to update blog:", error);
+        },
+      }
+    );
   };
 
   const handleSaveAsDraft = () => {
@@ -120,13 +136,38 @@ const CreateBlogPage = () => {
     form.handleSubmit(onSubmit)();
   };
 
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Spinner className="w-8 h-8" />
+      </div>
+    );
+  }
+
+  if (!blog) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-lg font-medium text-destructive">Blog not found</p>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/dashboard/blogs")}
+            className="mt-4"
+          >
+            Back to Blogs
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Error Display */}
-      {createBlogMutation.isError && (
+      {updateBlogMutation.isError && (
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
           <p className="text-sm font-medium text-destructive">
-            Error: {(createBlogMutation.error as any)?.message || "Failed to create blog"}
+            Error: {(updateBlogMutation.error as any)?.message || "Failed to update blog"}
           </p>
         </div>
       )}
@@ -137,15 +178,15 @@ const CreateBlogPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/dashboard/admin/blogs")}
+            onClick={() => router.push("/admin/dashboard/blogs")}
           >
             <LuArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Create New Blog Post</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Edit Blog Post</h1>
             <p className="text-sm text-muted-foreground">
-              Write and publish your blog content
+              Update your blog content
             </p>
           </div>
         </div>
@@ -154,16 +195,16 @@ const CreateBlogPage = () => {
           <Button
             variant="outline"
             onClick={handleSaveAsDraft}
-            disabled={createBlogMutation.isPending}
+            disabled={updateBlogMutation.isPending}
           >
             <LuSave className="mr-2 h-4 w-4" />
             Save as Draft
           </Button>
           <Button
             onClick={handlePublish}
-            disabled={createBlogMutation.isPending}
+            disabled={updateBlogMutation.isPending}
           >
-            {createBlogMutation.isPending ? (
+            {updateBlogMutation.isPending ? (
               <Spinner className="mr-2 h-4 w-4" />
             ) : (
               <LuEye className="mr-2 h-4 w-4" />
@@ -218,7 +259,7 @@ const CreateBlogPage = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Blog Content</CardTitle>
-                  <CardDescription>Write your blog post content</CardDescription>
+                  <CardDescription>Edit your blog post content</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -227,7 +268,6 @@ const CreateBlogPage = () => {
                       id="title"
                       placeholder="Enter blog title"
                       {...form.register("title")}
-                      onChange={(e) => handleTitleChange(e.target.value)}
                     />
                     {form.formState.errors.title && (
                       <p className="mt-1 text-xs text-destructive">
@@ -244,7 +284,7 @@ const CreateBlogPage = () => {
                       {...form.register("slug")}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Auto-generated from title. You can customize it.
+                      URL-friendly version of the title
                     </p>
                   </div>
 
@@ -264,11 +304,10 @@ const CreateBlogPage = () => {
                       name="content"
                       control={form.control}
                       render={({ field }) => (
-                        <JoditEditor
-                          value={field.value || ''}
-                          config={joditConfig}
-                          onBlur={field.onBlur}
-                          onChange={(newContent: string) => field.onChange(newContent)}
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Start writing your blog content..."
                         />
                       )}
                     />
@@ -489,4 +528,4 @@ const CreateBlogPage = () => {
   );
 };
 
-export default CreateBlogPage;
+export default EditBlogPage;

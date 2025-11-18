@@ -13,7 +13,7 @@ const AdminLayout = async ({ children }: { children: ReactNode }) => {
   const isAdmin = roles.includes("ADMIN") || roles.includes("SUPER_ADMIN");
 
   if (!isAdmin) {
-    return redirect("/dashboard");
+    return redirect("/admin/dashboard");
   }
 
   return <>{children}</>;

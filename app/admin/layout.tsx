@@ -6,7 +6,7 @@ import Sidebar from "./_components/sidebar";
 import { getSession } from "@/lib/getSession";
 import { redirect } from "next/navigation";
 
-const DashboardLayout = async ({ children }: LayoutProps<"/dashboard">) => {
+const DashboardLayout = async ({ children }: LayoutProps<"/admin">) => {
   const user = await getSession();
   if (!user) {
     return redirect("/auth/login");

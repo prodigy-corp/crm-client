@@ -25,7 +25,7 @@ export const useLogin = () => {
       if (response.data.redirect) {
         router.push(response.data.redirect as Route);
       } else {
-        router.push("/dashboard");
+        router.push("/admin/dashboard");
       }
     },
     onError: (error: ApiError) => {
@@ -51,7 +51,7 @@ export const useRegister = () => {
       if (response.data.redirect) {
         router.push(response.data.redirect as Route);
       } else {
-        router.push("/dashboard");
+        router.push("/admin/dashboard");
       }
     },
     onError: (error: ApiError) => {

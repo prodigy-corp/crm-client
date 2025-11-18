@@ -228,7 +228,7 @@ const AdminBlogsPage = () => {
                       toast.error("You do not have permission to update blogs.");
                       return;
                     }
-                    router.push(`/dashboard/admin/blogs/${blog.id}/edit`);
+                    router.push(`/admin/dashboard/blogs/${blog.id}/edit`);
                   }}
                 >
                   <LuPencil className="mr-2 h-4 w-4" />
@@ -348,7 +348,7 @@ const AdminBlogsPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-medium">Blogs Management</h1>
         {canCreateBlogs && (
-          <Button onClick={() => router.push("/dashboard/admin/blogs/create")}>
+          <Button onClick={() => router.push("/admin/dashboard/blogs/create")}>
             <LuPlus className="mr-2 h-4 w-4" />
             Create Blog
           </Button>

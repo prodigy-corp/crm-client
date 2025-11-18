@@ -141,11 +141,15 @@ export const useUser = (id: string) => {
 };
 
 // Employees Hooks
-export const useEmployees = (params?: AdminEmployeeQueryParams) => {
+export const useEmployees = (
+  params?: AdminEmployeeQueryParams,
+  enabled: boolean = true,
+) => {
   return useQuery({
     queryKey: adminKeys.employeesList(params),
     queryFn: () => adminApi.getEmployees(params),
     select: (data) => data.data,
+    enabled,
   });
 };
 

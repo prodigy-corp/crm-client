@@ -5,11 +5,18 @@ export interface AdminUser {
   id: string;
   name: string;
   email: string;
+  phone?:string;
   username?: string;
   status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING";
   role?: string;
   emailVerified?: boolean;
   isEmailVerified?: boolean;
+  isSellerVerified:boolean;
+  isTwoFactorEnabled:boolean;
+  blockedUntil?:string;
+  emailVerifiedAt?:string;
+  stripeCustomerId?:string;
+  stripeOnboardingComplete?:boolean;
   roles?: Array<{
     role: {
       name: string;
@@ -19,21 +26,34 @@ export interface AdminUser {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
+  accounts?:Accounts[]
+}
+
+export interface Accounts {
+  id:string,
+  provider:string,
+  type:string,
+  createdAt:string,
 }
 
 export interface CreateUserDto {
   name: string;
   email: string;
+  phone:string;
   username?: string;
   password: string;
-  role: string;
+  status:string;
+  roles: string[];
 }
 
 export interface UpdateUserDto {
   name?: string;
   email?: string;
+  phone?:string;
   username?: string;
-  role?: string;
+  roles?: string[];
+  isEmailVerified:boolean;
+  isTwoFactorEnabled:boolean;
   status?: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING";
 }
 

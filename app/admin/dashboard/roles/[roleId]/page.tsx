@@ -36,6 +36,7 @@ const RoleDetailPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   // Hooks
   const { data: role, isLoading: roleLoading, error: roleError } = useRole(roleId);
@@ -64,6 +65,31 @@ const RoleDetailPage = () => {
       setHasChanges(changed);
     }
   }, [selectedPermissions, role]);
+
+  // Group permissions by their group field
+  const groupPermissions = (perms: any[]) => {
+    if (!perms) return {};
+    
+    const grouped: Record<string, any[]> = {};
+    perms.forEach((perm: any) => {
+      const group = typeof perm === "object" ? perm.group || "Other" : "Other";
+      if (!grouped[group]) grouped[group] = [];
+      grouped[group].push(perm);
+    });
+    return grouped;
+  };
+
+  // Initialize all groups as expanded
+  useEffect(() => {
+    if (permissions) {
+      const groups = Object.keys(groupPermissions(permissions || []));
+      const expanded: Record<string, boolean> = {};
+      groups.forEach((group) => {
+        expanded[group] = true;
+      });
+      setExpandedGroups(expanded);
+    }
+  }, [permissions]);
 
   const togglePermission = (permissionName: string) => {
     setSelectedPermissions((prev) =>
@@ -102,6 +128,13 @@ const RoleDetailPage = () => {
     }
   };
 
+  const toggleGroup = (group: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }));
+  };
+
   if (roleLoading) {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
@@ -121,7 +154,7 @@ const RoleDetailPage = () => {
             {roleError?.message || "Role not found"}
           </p>
           <Button
-            onClick={() => router.push("/dashboard/admin/roles")}
+            onClick={() => router.push("/admin/dashboard/roles")}
             className="mt-4"
           >
             <LuArrowLeft className="mr-2 h-4 w-4" />
@@ -136,38 +169,7 @@ const RoleDetailPage = () => {
     typeof p === "object" ? p.name : p
   );
 
-  // Group permissions by their group field
-  const groupPermissions = (perms: any[]) => {
-    if (!perms) return {};
-    
-    const grouped: Record<string, any[]> = {};
-    perms.forEach((perm: any) => {
-      const group = typeof perm === "object" ? perm.group || "Other" : "Other";
-      if (!grouped[group]) grouped[group] = [];
-      grouped[group].push(perm);
-    });
-    return grouped;
-  };
-
   const groupedPermissions = groupPermissions(permissions || []);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-
-  // Initialize all groups as expanded
-  useEffect(() => {
-    if (permissions) {
-      const groups = Object.keys(groupedPermissions);
-      const expanded: Record<string, boolean> = {};
-      groups.forEach(group => expanded[group] = true);
-      setExpandedGroups(expanded);
-    }
-  }, [permissions]);
-
-  const toggleGroup = (group: string) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [group]: !prev[group]
-    }));
-  };
 
   return (
     <div className="space-y-6">
@@ -177,7 +179,7 @@ const RoleDetailPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/dashboard/admin/roles")}
+            onClick={() => router.push("/admin/dashboard/roles")}
           >
             <LuArrowLeft className="mr-2 h-4 w-4" />
             Back

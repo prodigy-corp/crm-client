@@ -23,6 +23,15 @@ const SidebarMenu = () => {
             if (isCmsItem && !canViewCmsSettings && !isLoading) {
               return false;
             }
+
+            if (
+              submenu.requiredPermission &&
+              !user?.permissions?.includes(submenu.requiredPermission) &&
+              !isLoading
+            ) {
+              return false;
+            }
+
             return true;
           });
 

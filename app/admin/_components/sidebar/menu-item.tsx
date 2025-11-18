@@ -11,7 +11,7 @@ type MenuItemProps = {
 
 const MenuItem = ({ icon, title, url }: MenuItemProps) => {
   const pathName = usePathname();
-  const active = pathName === url;
+  const active = pathName === url || pathName.startsWith(`${url}/`);
 
   return (
     <Link

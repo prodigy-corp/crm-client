@@ -97,16 +97,11 @@ const ProfileDropdown = ({ user }: ProfileDropdownProps) => {
             </Link>
           </DropdownMenuItem>
         )}
+        
         <DropdownMenuItem asChild>
-          <Link href={`/users/${user.id}` as Route}>
-            <LuUserRound className="size-4 opacity-70" aria-hidden="true" />
-            <span>Profile</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={"/dashboard/settings" as Route}>
+          <Link href={"/admin/dashboard"}>
             <LuSettings className="size-4 opacity-70" aria-hidden="true" />
-            <span>Settings</span>
+            <span>Admin Dashboard</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
