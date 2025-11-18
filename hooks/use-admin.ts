@@ -7,6 +7,17 @@ import {
   CreateBlogDto,
   CreateRoleDto,
   CreateUserDto,
+  AdminEmployee,
+  AdminEmployeeQueryParams,
+  EmployeeAttendanceQueryParams,
+  EmployeeSalaryPaymentQueryParams,
+  CreateAdminEmployeeDto,
+  UpdateAdminEmployeeDto,
+  ResignEmployeeDto,
+  EmployeeAttendanceActionDto,
+  UpsertEmployeeAttendanceDto,
+  CreateEmployeeSalaryIncrementDto,
+  CreateEmployeeSalaryPaymentDto,
   Role,
   UpdateBlogDto,
   UpdateRoleDto,
@@ -44,6 +55,14 @@ export const adminKeys = {
   usersList: (params?: UserQueryParams) => [...adminKeys.users(), "list", params] as const,
   user: (id: string) => [...adminKeys.users(), "detail", id] as const,
   userLoginHistory: (id: string) => [...adminKeys.users(), "login-history", id] as const,
+
+  employees: () => [...adminKeys.all, "employees"] as const,
+  employeesList: (params?: AdminEmployeeQueryParams) => [...adminKeys.employees(), "list", params] as const,
+  employee: (id: string) => [...adminKeys.employees(), "detail", id] as const,
+  employeeAttendance: (id: string, params?: EmployeeAttendanceQueryParams) =>
+    [...adminKeys.employee(id), "attendance", params] as const,
+  employeeSalaryPayments: (id: string, params?: EmployeeSalaryPaymentQueryParams) =>
+    [...adminKeys.employee(id), "salary-payments", params] as const,
   
   blogs: () => [...adminKeys.all, "blogs"] as const,
   blogsList: (params?: any) => [...adminKeys.blogs(), "list", params] as const,
@@ -120,6 +139,213 @@ export const useUser = (id: string) => {
     enabled: !!id,
   });
 };
+
+// Employees Hooks
+export const useEmployees = (params?: AdminEmployeeQueryParams) => {
+  return useQuery({
+    queryKey: adminKeys.employeesList(params),
+    queryFn: () => adminApi.getEmployees(params),
+    select: (data) => data.data,
+  });
+};
+
+export const useEmployee = (id: string) => {
+  return useQuery({
+    queryKey: adminKeys.employee(id),
+    queryFn: () => adminApi.getEmployeeById(id),
+    select: (data) => data.data,
+    enabled: !!id,
+  });
+};
+
+export const useCreateEmployee = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAdminEmployeeDto) => adminApi.createEmployee(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
+      toast.success(data.message || "Employee created successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create employee");
+    },
+  });
+};
+
+export const useUpdateEmployee = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateAdminEmployeeDto }) =>
+      adminApi.updateEmployee(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Employee updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update employee");
+    },
+  });
+};
+
+export const useDeleteEmployee = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminApi.deleteEmployee(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
+      toast.success(data.message || "Employee deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete employee");
+    },
+  });
+};
+
+export const useResignEmployee = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ResignEmployeeDto }) =>
+      adminApi.resignEmployee(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Employee marked as resigned");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to mark employee as resigned");
+    },
+  });
+};
+
+export const useUploadEmployeePhoto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) =>
+      adminApi.uploadEmployeePhoto(id, file),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Employee photo updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to upload employee photo");
+    },
+  });
+};
+
+export const useEmployeeAttendance = (
+  id: string,
+  params?: EmployeeAttendanceQueryParams,
+  enabled: boolean = true,
+) => {
+  return useQuery({
+    queryKey: adminKeys.employeeAttendance(id, params),
+    queryFn: () => adminApi.getEmployeeAttendance(id, params),
+    select: (data) => data.data,
+    enabled: !!id && enabled,
+  });
+};
+
+export const useEmployeeCheckIn = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data?: EmployeeAttendanceActionDto }) =>
+      adminApi.employeeCheckIn(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Employee checked in successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to check in employee");
+    },
+  });
+};
+
+export const useEmployeeCheckOut = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data?: EmployeeAttendanceActionDto }) =>
+      adminApi.employeeCheckOut(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Employee checked out successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to check out employee");
+    },
+  });
+};
+
+export const useUpsertEmployeeAttendance = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpsertEmployeeAttendanceDto }) =>
+      adminApi.upsertEmployeeAttendance(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Attendance updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update attendance");
+    },
+  });
+};
+
+export const useEmployeeSalaryPayments = (
+  id: string,
+  params?: EmployeeSalaryPaymentQueryParams,
+  enabled: boolean = true,
+) => {
+  return useQuery({
+    queryKey: adminKeys.employeeSalaryPayments(id, params),
+    queryFn: () => adminApi.getEmployeeSalaryPayments(id, params),
+    select: (data) => data.data,
+    enabled: !!id && enabled,
+  });
+};
+
+export const useCreateEmployeeSalaryIncrement = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreateEmployeeSalaryIncrementDto }) =>
+      adminApi.createEmployeeSalaryIncrement(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Salary increment created successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create salary increment");
+    },
+  });
+};
+
+export const useCreateEmployeeSalaryPayment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreateEmployeeSalaryPaymentDto }) =>
+      adminApi.createEmployeeSalaryPayment(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employeeSalaryPayments(variables.id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      toast.success(data.message || "Salary payment created successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create salary payment");
+    },
+  });
+};
+
 
 export const useUserLoginHistory = (id: string) => {
   return useQuery({

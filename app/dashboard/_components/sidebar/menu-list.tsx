@@ -25,41 +25,46 @@ export const menuList = [
       },
       {
         id: 3,
+        title: "Employees Management",
+        url: "/dashboard/admin/employees",
+      },
+      {
+        id: 4,
         title: "Blogs Management",
         url: "/dashboard/admin/blogs",
       },
       {
-        id: 4,
+        id: 5,
         title: "Roles & Permissions",
         url: "/dashboard/admin/roles",
       },
       {
-        id: 5,
+        id: 6,
         title: "System Health",
         url: "/dashboard/admin/system",
       },
       {
-        id: 6,
+        id: 7,
         title: "Site Settings",
         url: "/dashboard/admin/cms/site-settings",
       },
       {
-        id: 7,
+        id: 8,
         title: "SEO Settings",
         url: "/dashboard/admin/cms/seo-settings",
       },
       {
-        id: 8,
+        id: 9,
         title: "Hero Sections",
         url: "/dashboard/admin/cms/hero-sections",
       },
       {
-        id: 9,
+        id: 10,
         title: "Banners",
         url: "/dashboard/admin/cms/banners",
       },
       {
-        id: 10,
+        id: 11,
         title: "Testimonials",
         url: "/dashboard/admin/cms/testimonials",
       },

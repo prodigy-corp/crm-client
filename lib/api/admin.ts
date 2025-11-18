@@ -528,6 +528,210 @@ export interface ContentQueryParams {
   sortOrder?: "asc" | "desc";
 }
 
+// Employees Management Types
+export type EmployeeStatus = "ACTIVE" | "INACTIVE" | "RESIGNED";
+
+export interface AdminEmployee {
+  id: string;
+  employeeCode?: string;
+  name: string;
+  designation?: string;
+  mobileNumber?: string;
+  emailAddress?: string;
+  joiningDate: string;
+  resignDate?: string | null;
+  status: EmployeeStatus;
+  baseSalary: number;
+  photoUrl?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+}
+
+export interface EmployeeUserSummary {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export type EmployeeAttendanceStatus =
+  | "PRESENT"
+  | "ABSENT"
+  | "LATE"
+  | "ON_LEAVE";
+
+export interface EmployeeAttendance {
+  id: string;
+  employeeId: string;
+  date: string;
+  checkInAt?: string | null;
+  checkOutAt?: string | null;
+  workingHours?: number | null;
+  status: EmployeeAttendanceStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EmployeeSalaryPaymentStatus = "PENDING" | "PAID" | "CANCELLED";
+
+export interface EmployeeSalaryPayment {
+  id: string;
+  employeeId: string;
+  month: number;
+  year: number;
+  basicSalary: number;
+  grossSalary: number;
+  totalDeduction: number;
+  netPayable: number;
+  paymentDate?: string | null;
+  status: EmployeeSalaryPaymentStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EmployeeSalaryIncrement {
+  id: string;
+  employeeId: string;
+  previousSalary: number;
+  newSalary: number;
+  incrementAmount: number;
+  effectiveFrom: string;
+  reason?: string;
+  approvedById?: string;
+  createdAt: string;
+}
+
+export interface AdminEmployeeDetail extends AdminEmployee {
+  user?: EmployeeUserSummary | null;
+  attendanceRecords?: EmployeeAttendance[];
+  salaryIncrements?: EmployeeSalaryIncrement[];
+  salaryPayments?: EmployeeSalaryPayment[];
+}
+
+export interface AdminEmployeeQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: EmployeeStatus;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface EmployeeAttendanceQueryParams {
+  page?: number;
+  limit?: number;
+  fromDate?: string;
+  toDate?: string;
+  status?: EmployeeAttendanceStatus;
+}
+
+export interface EmployeeSalaryPaymentQueryParams {
+  page?: number;
+  limit?: number;
+  month?: number;
+  year?: number;
+  status?: EmployeeSalaryPaymentStatus;
+}
+
+// Employees DTOs
+export interface CreateAdminEmployeeDto {
+  // Basic
+  employeeCode?: string;
+  name: string;
+  designation?: string;
+
+  // Personal
+  fatherName?: string;
+  motherName?: string;
+  dateOfBirth?: string;
+  nationalId?: string;
+  bloodGroup?: string;
+
+  // Job
+  joiningDate: string;
+  baseSalary: number;
+
+  // Contact
+  mobileNumber?: string;
+  alternativeContactNumber?: string;
+  corporateContactNumber?: string;
+  emailAddress?: string;
+  facebookProfileLink?: string;
+
+  // Bank
+  bankAccountNumber?: string;
+  branchName?: string;
+  bankName?: string;
+
+  // Family / Emergency
+  fatherContactNumber?: string;
+  motherContactNumber?: string;
+  emergencyContactNumber?: string;
+
+  // Education – SSC
+  sscRoll?: string;
+  sscRegistrationNumber?: string;
+  sscPassingYear?: number;
+  sscBoard?: string;
+  sscResult?: string;
+
+  // Education – HSC
+  hscRoll?: string;
+  hscRegistrationNumber?: string;
+  hscPassingYear?: number;
+  hscBoard?: string;
+  hscResult?: string;
+
+  // Education – Honors/Diploma
+  honorsRoll?: string;
+  honorsRegistrationNumber?: string;
+  honorsPassingYear?: number;
+  honorsInstitutionName?: string;
+  honorsSubject?: string;
+  honorsResult?: string;
+
+  // Status
+  status?: EmployeeStatus;
+}
+
+export interface UpdateAdminEmployeeDto extends Partial<CreateAdminEmployeeDto> {
+  resignDate?: string;
+  userId?: string;
+}
+
+export interface ResignEmployeeDto {
+  resignDate?: string;
+}
+
+export interface EmployeeAttendanceActionDto {
+  date?: string;
+}
+
+export interface UpsertEmployeeAttendanceDto {
+  date: string;
+  status: EmployeeAttendanceStatus;
+  checkInAt?: string;
+  checkOutAt?: string;
+  workingHours?: number;
+}
+
+export interface CreateEmployeeSalaryIncrementDto {
+  newSalary: number;
+  effectiveFrom: string;
+  reason?: string;
+}
+
+export interface CreateEmployeeSalaryPaymentDto {
+  month: number;
+  year: number;
+  basicSalary: number;
+  grossSalary: number;
+  totalDeduction: number;
+  netPayable: number;
+  paymentDate?: string;
+  status?: EmployeeSalaryPaymentStatus;
+}
+
 // Admin API Services
 export const adminApi = {
   // Dashboard
@@ -567,6 +771,101 @@ export const adminApi = {
 
   getUserLoginHistory: (id: string): Promise<ApiResponse<any[]>> =>
     apiClient.get(`/admin/users/${id}/login-history`).then((res) => res.data),
+
+  // Employees Management
+  getEmployees: (params?: AdminEmployeeQueryParams): Promise<ApiResponse<PaginatedResponse<AdminEmployee>>> =>
+    apiClient.get("/admin/employees", { params }).then((res) => res.data),
+
+  getEmployeeById: (id: string): Promise<ApiResponse<AdminEmployeeDetail>> =>
+    apiClient.get(`/admin/employees/${id}`).then((res) => res.data),
+
+  createEmployee: (data: CreateAdminEmployeeDto): Promise<ApiResponse<AdminEmployee>> =>
+    apiClient.post("/admin/employees", data).then((res) => res.data),
+
+  updateEmployee: (id: string, data: UpdateAdminEmployeeDto): Promise<ApiResponse<AdminEmployee>> =>
+    apiClient.put(`/admin/employees/${id}`, data).then((res) => res.data),
+
+  deleteEmployee: (id: string): Promise<ApiResponse<void>> =>
+    apiClient.delete(`/admin/employees/${id}`).then((res) => res.data),
+
+  resignEmployee: (id: string, data: ResignEmployeeDto): Promise<ApiResponse<AdminEmployee>> =>
+    apiClient.put(`/admin/employees/${id}/resign`, data).then((res) => res.data),
+
+  uploadEmployeePhoto: (
+    id: string,
+    file: File,
+  ): Promise<ApiResponse<{ id: string; photoUrl: string; key: string }>> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiClient
+      .post<ApiResponse<{ id: string; photoUrl: string; key: string }>>(
+        `/admin/employees/${id}/photo`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      )
+      .then((res) => res.data);
+  },
+
+  getEmployeeAttendance: (
+    id: string,
+    params?: EmployeeAttendanceQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<EmployeeAttendance>>> =>
+    apiClient
+      .get(`/admin/employees/${id}/attendance`, { params })
+      .then((res) => res.data),
+
+  employeeCheckIn: (
+    id: string,
+    data?: EmployeeAttendanceActionDto,
+  ): Promise<ApiResponse<EmployeeAttendance>> =>
+    apiClient
+      .post(`/admin/employees/${id}/attendance/check-in`, data)
+      .then((res) => res.data),
+
+  employeeCheckOut: (
+    id: string,
+    data?: EmployeeAttendanceActionDto,
+  ): Promise<ApiResponse<EmployeeAttendance>> =>
+    apiClient
+      .post(`/admin/employees/${id}/attendance/check-out`, data)
+      .then((res) => res.data),
+
+  upsertEmployeeAttendance: (
+    id: string,
+    data: UpsertEmployeeAttendanceDto,
+  ): Promise<ApiResponse<EmployeeAttendance>> =>
+    apiClient
+      .put(`/admin/employees/${id}/attendance`, data)
+      .then((res) => res.data),
+
+  getEmployeeSalaryPayments: (
+    id: string,
+    params?: EmployeeSalaryPaymentQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<EmployeeSalaryPayment>>> =>
+    apiClient
+      .get(`/admin/employees/${id}/salary/payments`, { params })
+      .then((res) => res.data),
+
+  createEmployeeSalaryIncrement: (
+    id: string,
+    data: CreateEmployeeSalaryIncrementDto,
+  ): Promise<ApiResponse<EmployeeSalaryIncrement>> =>
+    apiClient
+      .post(`/admin/employees/${id}/salary/increments`, data)
+      .then((res) => res.data),
+
+  createEmployeeSalaryPayment: (
+    id: string,
+    data: CreateEmployeeSalaryPaymentDto,
+  ): Promise<ApiResponse<EmployeeSalaryPayment>> =>
+    apiClient
+      .post(`/admin/employees/${id}/salary/payments`, data)
+      .then((res) => res.data),
 
   // Blogs Management
   getBlogs: (params?: any): Promise<ApiResponse<PaginatedResponse<BlogPost>>> =>
