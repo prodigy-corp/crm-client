@@ -145,6 +145,36 @@ const AdminEmployeesPage = () => {
       },
     },
     {
+      id: "userAccount",
+      header: "User Account",
+      cell: ({ row }) => {
+        const employee = row.original;
+        if (!employee.user) {
+          return (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground italic">
+                Not linked
+              </span>
+              <Badge variant="outline" className="text-xs">
+                No Account
+              </Badge>
+            </div>
+          );
+        }
+        return (
+          <div className="space-y-1">
+            <div className="text-sm font-medium">{employee.user.name}</div>
+            <div className="text-xs text-muted-foreground">
+              {employee.user.email}
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              Has Account
+            </Badge>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "employeeCode",
       header: "Employee Code",
       cell: ({ row }) => (

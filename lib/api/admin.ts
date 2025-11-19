@@ -5,18 +5,18 @@ export interface AdminUser {
   id: string;
   name: string;
   email: string;
-  phone?:string;
+  phone?: string;
   username?: string;
   status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING";
   role?: string;
   emailVerified?: boolean;
   isEmailVerified?: boolean;
-  isSellerVerified:boolean;
-  isTwoFactorEnabled:boolean;
-  blockedUntil?:string;
-  emailVerifiedAt?:string;
-  stripeCustomerId?:string;
-  stripeOnboardingComplete?:boolean;
+  isSellerVerified: boolean;
+  isTwoFactorEnabled: boolean;
+  blockedUntil?: string;
+  emailVerifiedAt?: string;
+  stripeCustomerId?: string;
+  stripeOnboardingComplete?: boolean;
   roles?: Array<{
     role: {
       name: string;
@@ -26,34 +26,34 @@ export interface AdminUser {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
-  accounts?:Accounts[]
+  accounts?: Accounts[]
 }
 
 export interface Accounts {
-  id:string,
-  provider:string,
-  type:string,
-  createdAt:string,
+  id: string,
+  provider: string,
+  type: string,
+  createdAt: string,
 }
 
 export interface CreateUserDto {
   name: string;
   email: string;
-  phone:string;
+  phone: string;
   username?: string;
   password: string;
-  status:string;
+  status: string;
   roles: string[];
 }
 
 export interface UpdateUserDto {
   name?: string;
   email?: string;
-  phone?:string;
+  phone?: string;
   username?: string;
   roles?: string[];
-  isEmailVerified:boolean;
-  isTwoFactorEnabled:boolean;
+  isEmailVerified: boolean;
+  isTwoFactorEnabled: boolean;
   status?: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING";
 }
 
@@ -138,25 +138,25 @@ export interface BlogPost {
   content: string;
   featuredImage?: string;
   imageAlt?: string;
-  
+
   // SEO Fields
   metaTitle?: string;
   metaDescription?: string;
   focusKeyword?: string;
   keywords?: string[];
-  
+
   // Publishing
   status: "DRAFT" | "PUBLISHED" | "SCHEDULED" | "ARCHIVED";
   publishedAt?: string;
   scheduledFor?: string;
-  
+
   // Author
   authorId: string;
   author?: {
     name: string;
     email: string;
   };
-  
+
   // Category
   categoryId?: string;
   category?: {
@@ -164,14 +164,14 @@ export interface BlogPost {
     name: string;
     slug: string;
   };
-  
+
   // Tags
   tags?: Array<{
     id: string;
     name: string;
     slug: string;
   }>;
-  
+
   // Analytics
   viewCount: number;
   likeCount: number;
@@ -179,12 +179,12 @@ export interface BlogPost {
   shareCount: number;
   readingTime?: number;
   wordCount?: number;
-  
+
   // Features
   isFeatured: boolean;
   allowComments: boolean;
   isIndexable: boolean;
-  
+
   // Timestamps
   createdAt: string;
   updatedAt: string;
@@ -212,7 +212,7 @@ export interface CreateBlogDto {
   isIndexable?: boolean;
 }
 
-export interface UpdateBlogDto extends Partial<CreateBlogDto> {}
+export interface UpdateBlogDto extends Partial<CreateBlogDto> { }
 
 export interface BlogQueryParams {
   page?: number;
@@ -566,6 +566,8 @@ export interface AdminEmployee {
   createdAt: string;
   updatedAt?: string;
   deletedAt?: string | null;
+  // User link (for role-based employee management)
+  user?: EmployeeUserSummary | null;
 }
 
 export interface EmployeeUserSummary {
@@ -712,6 +714,9 @@ export interface CreateAdminEmployeeDto {
 
   // Status
   status?: EmployeeStatus;
+
+  // User Link (optional, for linking to existing user account)
+  userId?: string;
 }
 
 export interface UpdateAdminEmployeeDto extends Partial<CreateAdminEmployeeDto> {
@@ -1030,7 +1035,7 @@ export const adminApi = {
 export const uploadLogo = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
     "/admin/cms/upload/logo",
     formData,
@@ -1047,7 +1052,7 @@ export const uploadLogo = async (file: File): Promise<ApiResponse<{ url: string;
 export const uploadFavicon = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
     "/admin/cms/upload/favicon",
     formData,
@@ -1064,7 +1069,7 @@ export const uploadFavicon = async (file: File): Promise<ApiResponse<{ url: stri
 export const uploadSeoImage = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
     "/admin/cms/upload/seo-image",
     formData,
@@ -1081,7 +1086,7 @@ export const uploadSeoImage = async (file: File): Promise<ApiResponse<{ url: str
 export const uploadHeroImage = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
     "/admin/cms/upload/hero-image",
     formData,
@@ -1098,7 +1103,7 @@ export const uploadHeroImage = async (file: File): Promise<ApiResponse<{ url: st
 export const uploadTestimonialAvatar = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
     "/admin/cms/upload/testimonial-avatar",
     formData,
@@ -1115,7 +1120,7 @@ export const uploadTestimonialAvatar = async (file: File): Promise<ApiResponse<{
 export const uploadContentImage = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
     "/admin/cms/upload/content-image",
     formData,
