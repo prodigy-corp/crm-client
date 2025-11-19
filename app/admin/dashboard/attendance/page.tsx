@@ -27,7 +27,6 @@ import {
     LuFilter,
     LuDownload,
     LuCalendar,
-    LuInfo,
     LuUser,
     LuEye,
     LuLogIn,
@@ -38,9 +37,9 @@ import { format, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } f
 import { useAuth } from "@/hooks/use-auth";
 import {
     EmployeeAttendanceStatus,
-    AdminEmployee,
+    EmployeeAttendance,
 } from "@/lib/api/admin";
-import { useEmployees } from "@/hooks/use-admin";
+import { useAllAttendance } from "@/hooks/use-admin";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -131,69 +130,29 @@ export default function AttendancePage() {
     const canViewAttendance = !!user?.permissions?.includes(
         "admin.employees.view",
     );
-    const canManageAttendance = !!user?.permissions?.includes(
-        "admin.employees.manage",
-    );
 
     const {
-        data: employeesData,
+        data: attendanceData,
         isLoading,
         error,
-    } = useEmployees(
+    } = useAllAttendance(
         {
             page,
             limit,
             search: searchTerm || undefined,
-            status: "ACTIVE",
-            sortBy: "name",
-            sortOrder: "asc",
+            status: statusFilter === "ALL" ? undefined : statusFilter,
+            fromDate: dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+            toDate: dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
         },
         !isAuthLoading && !!user && canViewAttendance,
     );
 
-    // Generate consistent mock attendance data per employee
-    const getEmployeeMockData = (employeeId: string) => {
-        // Use employee ID to generate consistent mock data
-        const seed = employeeId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const statuses: EmployeeAttendanceStatus[] = ["PRESENT", "ABSENT", "LATE", "ON_LEAVE"];
-        const statusIndex = seed % statuses.length;
-
-        return {
-            status: statuses[statusIndex],
-            checkIn: `${(9 + (seed % 2)).toString().padStart(2, "0")}:${((seed * 7) % 60).toString().padStart(2, "0")} AM`,
-            checkOut: `${(5 + (seed % 3)).toString().padStart(2, "0")}:${((seed * 11) % 60).toString().padStart(2, "0")} PM`,
-            workingHours: (7 + ((seed % 20) / 10)).toFixed(2),
-        };
-    };
-
-    // Filter employees based on search, status, and date range
-    const filteredData = useMemo(() => {
-        return employeesData?.data?.filter((emp) => {
-            const matchesSearch =
-                !searchTerm ||
-                emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                emp.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
-
-            // Filter by status (using mock data)
-            const mockData = getEmployeeMockData(emp.id);
-            const matchesStatus = statusFilter === "ALL" || mockData.status === statusFilter;
-
-            // Date range filtering note:
-            // In production, you'd compare attendance record dates with dateRange.from/to
-            // For now, we'll allow all dates since we don't have real attendance records
-            const matchesDateRange = true; // All mock data is considered "today"
-
-            return matchesSearch && matchesStatus && matchesDateRange;
-        });
-    }, [employeesData?.data, searchTerm, statusFilter, dateRange]);
-
-    // Calculate stats from filtered data
+    // Calculate stats from fetched data
     const stats = useMemo(() => {
-        if (!filteredData) return { present: 0, absent: 0, late: 0, onLeave: 0 };
+        if (!attendanceData?.data) return { present: 0, absent: 0, late: 0, onLeave: 0 };
 
-        return filteredData.reduce((acc, emp) => {
-            const mockData = getEmployeeMockData(emp.id);
-            switch (mockData.status) {
+        return attendanceData.data.reduce((acc: any, record: EmployeeAttendance) => {
+            switch (record.status) {
                 case "PRESENT":
                     acc.present++;
                     break;
@@ -209,7 +168,7 @@ export default function AttendancePage() {
             }
             return acc;
         }, { present: 0, absent: 0, late: 0, onLeave: 0 });
-    }, [filteredData]);
+    }, [attendanceData?.data]);
 
     const getStatusBadge = (status: EmployeeAttendanceStatus) => {
         const variants: Record<EmployeeAttendanceStatus, string> = {
@@ -228,12 +187,14 @@ export default function AttendancePage() {
         );
     };
 
-    const columns: ColumnDef<AdminEmployee>[] = [
+    const columns: ColumnDef<EmployeeAttendance>[] = [
         {
-            accessorKey: "name",
+            accessorKey: "employee.name",
             header: "Employee",
             cell: ({ row }) => {
-                const employee = row.original;
+                const employee = row.original.employee;
+                if (!employee) return <span className="text-muted-foreground">Unknown</span>;
+
                 return (
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -252,95 +213,84 @@ export default function AttendancePage() {
             },
         },
         {
-            accessorKey: "designation",
+            accessorKey: "employee.designation",
             header: "Designation",
             cell: ({ row }) => (
                 <span className="text-sm">
-                    {row.original.designation || "—"}
+                    {row.original.employee?.designation || "—"}
                 </span>
             ),
         },
         {
-            id: "status",
+            accessorKey: "date",
+            header: "Date",
+            cell: ({ row }) => (
+                <span className="text-sm">
+                    {format(new Date(row.original.date), "MMM dd, yyyy")}
+                </span>
+            ),
+        },
+        {
+            accessorKey: "status",
             header: "Status",
             cell: ({ row }) => {
-                const mockData = getEmployeeMockData(row.original.id);
-                return getStatusBadge(mockData.status);
+                return getStatusBadge(row.original.status);
             },
         },
         {
-            id: "checkIn",
+            accessorKey: "checkInAt",
             header: "Check In",
             cell: ({ row }) => {
-                const mockData = getEmployeeMockData(row.original.id);
                 return (
                     <div className="flex items-center gap-1 text-sm">
                         <LuLogIn className="h-3 w-3 text-green-600" />
-                        {mockData.checkIn}
+                        {row.original.checkInAt ? format(new Date(row.original.checkInAt), "hh:mm a") : "—"}
                     </div>
                 );
             },
         },
         {
-            id: "checkOut",
+            accessorKey: "checkOutAt",
             header: "Check Out",
             cell: ({ row }) => {
-                const mockData = getEmployeeMockData(row.original.id);
                 return (
                     <div className="flex items-center gap-1 text-sm">
                         <LuLogOut className="h-3 w-3 text-red-600" />
-                        {mockData.checkOut}
+                        {row.original.checkOutAt ? format(new Date(row.original.checkOutAt), "hh:mm a") : "—"}
                     </div>
                 );
             },
         },
         {
-            id: "workingHours",
+            accessorKey: "workingHours",
             header: "Working Hours",
             cell: ({ row }) => {
-                const mockData = getEmployeeMockData(row.original.id);
-                return <span className="text-sm font-medium">{mockData.workingHours} hrs</span>;
+                return (
+                    <div className="flex items-center gap-1 text-sm">
+                        <LuClock className="h-3 w-3 text-muted-foreground" />
+                        {row.original.workingHours ? `${Number(row.original.workingHours).toFixed(2)} hrs` : "—"}
+                    </div>
+                );
             },
         },
         {
             id: "actions",
-            header: "Actions",
             cell: ({ row }) => {
-                const employee = row.original;
                 return (
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                                router.push(
-                                    `/admin/dashboard/employees/${employee.id}?tab=attendance`,
-                                )
-                            }
-                        >
-                            <LuEye className="mr-2 h-4 w-4" />
-                            View
-                        </Button>
-                        {canManageAttendance && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    // Handle check-in action
-                                }}
-                            >
-                                <LuLogIn className="mr-2 h-4 w-4" />
-                                Check In
-                            </Button>
-                        )}
-                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push(`/admin/dashboard/employees/${row.original.employeeId}?tab=attendance`)}
+                    >
+                        <LuEye className="h-4 w-4" />
+                    </Button>
                 );
             },
         },
     ];
 
     const handleExport = () => {
-        if (!filteredData) return;
+        if (!attendanceData?.data) return;
 
         const csv = [
             [
@@ -353,17 +303,16 @@ export default function AttendancePage() {
                 "Working Hours",
                 "Status",
             ],
-            ...filteredData.map((emp) => {
-                const mockData = getEmployeeMockData(emp.id);
+            ...attendanceData.data.map((record: EmployeeAttendance) => {
                 return [
-                    emp.name,
-                    emp.employeeCode || "",
-                    emp.designation || "",
-                    dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "",
-                    mockData.checkIn,
-                    mockData.checkOut,
-                    mockData.workingHours,
-                    mockData.status,
+                    record.employee?.name || "",
+                    record.employee?.employeeCode || "",
+                    record.employee?.designation || "",
+                    format(new Date(record.date), "yyyy-MM-dd"),
+                    record.checkInAt ? format(new Date(record.checkInAt), "hh:mm a") : "",
+                    record.checkOutAt ? format(new Date(record.checkOutAt), "hh:mm a") : "",
+                    record.workingHours || "",
+                    record.status,
                 ];
             }),
         ]
@@ -381,314 +330,227 @@ export default function AttendancePage() {
 
     if (isAuthLoading) {
         return (
-            <div className="flex h-64 items-center justify-center">
-                <Spinner className="h-8 w-8" />
+            <div className="flex h-full items-center justify-center">
+                <Spinner />
             </div>
         );
     }
 
     if (isAuthError || !user) {
         return (
-            <div className="flex h-64 items-center justify-center">
-                <div className="text-center">
-                    <LuInfo className="mx-auto h-12 w-12 text-destructive" />
-                    <p className="mt-4 text-lg font-medium text-destructive">
-                        Failed to load user information
-                    </p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        Please refresh the page or try again later.
-                    </p>
-                </div>
+            <div className="flex h-full flex-col items-center justify-center gap-4">
+                <p className="text-muted-foreground">
+                    Please log in to view attendance.
+                </p>
+                <Button onClick={() => router.push("/auth/login")}>Log In</Button>
             </div>
         );
     }
 
     if (!canViewAttendance) {
         return (
-            <div className="flex h-64 items-center justify-center">
-                <div className="text-center">
-                    <LuInfo className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <p className="mt-4 text-lg font-medium">Access denied</p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        You do not have permission to view attendance records.
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="flex h-64 items-center justify-center">
-                <div className="text-center">
-                    <p className="text-lg font-medium text-destructive">
-                        Error loading attendance
-                    </p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        {(error as any).message ||
-                            "Please check your connection and try again"}
-                    </p>
-                </div>
+            <div className="flex h-full flex-col items-center justify-center gap-4">
+                <p className="text-destructive">
+                    You do not have permission to view attendance.
+                </p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold">
-                        Attendance Management
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Track and manage employee attendance records
+                    <h1 className="text-2xl font-bold tracking-tight">Attendance</h1>
+                    <p className="text-muted-foreground">
+                        Monitor employee attendance and working hours.
                     </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleExport}>
+                        <LuDownload className="mr-2 h-4 w-4" />
+                        Export Report
+                    </Button>
                 </div>
             </div>
 
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-4">
-                <Card className="p-6">
+                <Card className="p-4">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
-                            <LuUser className="h-6 w-6 text-green-600 dark:text-green-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300">
+                            <LuUser className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm font-medium text-muted-foreground">
                                 Present
                             </p>
-                            <p className="text-2xl font-semibold">
-                                {stats.present}
-                            </p>
+                            <h3 className="text-2xl font-bold">{stats.present}</h3>
                         </div>
                     </div>
                 </Card>
-                <Card className="p-6">
+                <Card className="p-4">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900">
-                            <LuUser className="h-6 w-6 text-red-600 dark:text-red-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300">
+                            <LuUser className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm font-medium text-muted-foreground">
                                 Absent
                             </p>
-                            <p className="text-2xl font-semibold">{stats.absent}</p>
+                            <h3 className="text-2xl font-bold">{stats.absent}</h3>
                         </div>
                     </div>
                 </Card>
-                <Card className="p-6">
+                <Card className="p-4">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900">
-                            <LuClock className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300">
+                            <LuClock className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm font-medium text-muted-foreground">
                                 Late
                             </p>
-                            <p className="text-2xl font-semibold">{stats.late}</p>
+                            <h3 className="text-2xl font-bold">{stats.late}</h3>
                         </div>
                     </div>
                 </Card>
-                <Card className="p-6">
+                <Card className="p-4">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
-                            <LuCalendar className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+                            <LuCalendar className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm font-medium text-muted-foreground">
                                 On Leave
                             </p>
-                            <p className="text-2xl font-semibold">{stats.onLeave}</p>
+                            <h3 className="text-2xl font-bold">{stats.onLeave}</h3>
                         </div>
                     </div>
                 </Card>
             </div>
 
-            {/* Filters and Table */}
             <Card className="p-6">
-                <div className="mb-6 space-y-4">
-                    <div className="flex items-center gap-2">
-                        <LuFilter className="h-4 w-4 text-muted-foreground" />
-                        <h3 className="text-sm font-medium">
-                            Filters & Search
-                        </h3>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-4">
-                        <div className="space-y-2 md:col-span-2">
-                            <label className="text-sm font-medium">
-                                Date Range
-                            </label>
-                            <div className="flex gap-2">
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className={cn(
-                                                "flex-1 justify-start text-left font-normal",
-                                                !dateRange.from && "text-muted-foreground",
-                                            )}
-                                        >
-                                            <LuCalendar className="mr-2 h-4 w-4" />
-                                            {dateRange.from ? (
-                                                dateRange.to ? (
-                                                    <>
-                                                        {format(dateRange.from, "LLL dd, y")} -{" "}
-                                                        {format(dateRange.to, "LLL dd, y")}
-                                                    </>
-                                                ) : (
-                                                    format(dateRange.from, "LLL dd, y")
-                                                )
-                                            ) : (
-                                                <span>Pick a date range</span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <div className="flex flex-col sm:flex-row">
-                                            <div className="border-b sm:border-b-0 sm:border-r bg-muted/30 p-3">
-                                                <p className="text-xs font-semibold uppercase text-muted-foreground mb-3">
-                                                    Quick Select
-                                                </p>
-                                                <div className="space-y-1">
-                                                    {dateRangePresets.map((preset) => (
-                                                        <Button
-                                                            key={preset.label}
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="w-full justify-start font-normal hover:bg-primary/10"
-                                                            onClick={() => {
-                                                                setDateRange(preset.getValue());
-                                                            }}
-                                                        >
-                                                            {preset.label}
-                                                        </Button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="p-3">
-                                                <Calendar
-                                                    mode="range"
-                                                    selected={{
-                                                        from: dateRange.from,
-                                                        to: dateRange.to,
+                <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-1 items-center gap-4">
+                        <div className="relative flex-1 md:max-w-sm">
+                            <LuSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search employees..."
+                                className="pl-9"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <Select
+                            value={statusFilter}
+                            onValueChange={(value) =>
+                                setStatusFilter(value as EmployeeAttendanceStatus | "ALL")
+                            }
+                        >
+                            <SelectTrigger className="w-[180px]">
+                                <LuFilter className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Statuses</SelectItem>
+                                <SelectItem value="PRESENT">Present</SelectItem>
+                                <SelectItem value="ABSENT">Absent</SelectItem>
+                                <SelectItem value="LATE">Late</SelectItem>
+                                <SelectItem value="ON_LEAVE">On Leave</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "justify-start text-left font-normal",
+                                        !dateRange && "text-muted-foreground",
+                                    )}
+                                >
+                                    <LuCalendar className="mr-2 h-4 w-4" />
+                                    {dateRange?.from ? (
+                                        dateRange.to ? (
+                                            <>
+                                                {format(dateRange.from, "LLL dd, y")} -{" "}
+                                                {format(dateRange.to, "LLL dd, y")}
+                                            </>
+                                        ) : (
+                                            format(dateRange.from, "LLL dd, y")
+                                        )
+                                    ) : (
+                                        <span>Pick a date</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <div className="flex">
+                                    <div className="border-r p-2">
+                                        <div className="flex flex-col gap-1">
+                                            {dateRangePresets.map((preset) => (
+                                                <Button
+                                                    key={preset.label}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="justify-start text-xs"
+                                                    onClick={() => {
+                                                        setDateRange(preset.getValue());
                                                     }}
-                                                    onSelect={(range: any) => {
-                                                        setDateRange({
-                                                            from: range?.from,
-                                                            to: range?.to,
-                                                        });
-                                                    }}
-                                                    numberOfMonths={2}
-                                                />
-                                            </div>
+                                                >
+                                                    {preset.label}
+                                                </Button>
+                                            ))}
                                         </div>
-                                    </PopoverContent>
-                                </Popover>
-                                {dateRange.from && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                            setDateRange({ from: undefined, to: undefined })
-                                        }
-                                    >
-                                        <LuX className="h-4 w-4" />
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">
-                                Search
-                            </label>
-                            <div className="relative">
-                                <LuSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search employees..."
-                                    value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        setPage(1);
-                                    }}
-                                    className="pl-10"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">
-                                Status
-                            </label>
-                            <Select
-                                value={statusFilter}
-                                onValueChange={(value) => {
-                                    setStatusFilter(
-                                        value as EmployeeAttendanceStatus | "ALL",
-                                    );
-                                    setPage(1);
+                                    </div>
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={dateRange?.from}
+                                        selected={dateRange}
+                                        onSelect={(range) => setDateRange(range as DateRange)}
+                                        numberOfMonths={2}
+                                    />
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                        {(searchTerm || statusFilter !== "ALL" || dateRange.from) && (
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setSearchTerm("");
+                                    setStatusFilter("ALL");
+                                    setDateRange({ from: undefined, to: undefined });
                                 }}
+                                className="h-8 px-2 lg:px-3"
                             >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">
-                                        All Status
-                                    </SelectItem>
-                                    <SelectItem value="PRESENT">
-                                        Present
-                                    </SelectItem>
-                                    <SelectItem value="ABSENT">
-                                        Absent
-                                    </SelectItem>
-                                    <SelectItem value="LATE">Late</SelectItem>
-                                    <SelectItem value="ON_LEAVE">
-                                        On Leave
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <div className="flex justify-end">
-                        <Button onClick={handleExport} variant="outline">
-                            <LuDownload className="mr-2 h-4 w-4" />
-                            Export CSV
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="mb-4 flex items-center justify-between">
-                    <h3 className="flex items-center gap-2 text-lg font-semibold">
-                        <LuCalendar className="h-5 w-5" />
-                        Attendance Records
-                        {dateRange.from && dateRange.to && (
-                            <span className="text-sm font-normal text-muted-foreground">
-                                ({format(dateRange.from, "MMM dd")} -{" "}
-                                {format(dateRange.to, "MMM dd, yyyy")})
-                            </span>
+                                Reset
+                                <LuX className="ml-2 h-4 w-4" />
+                            </Button>
                         )}
-                    </h3>
-                    {employeesData?.meta && (
-                        <p className="text-sm text-muted-foreground">
-                            Showing: {filteredData?.length || 0} / {employeesData.meta.total} employees
-                        </p>
-                    )}
+                    </div>
                 </div>
 
                 {isLoading ? (
-                    <div className="flex h-64 items-center justify-center">
-                        <Spinner className="h-8 w-8" />
+                    <div className="flex h-32 items-center justify-center">
+                        <Spinner />
+                    </div>
+                ) : error ? (
+                    <div className="flex h-32 items-center justify-center text-destructive">
+                        Failed to load attendance data
                     </div>
                 ) : (
                     <DataTable
                         columns={columns}
-                        data={filteredData || []}
-                        pagination={employeesData?.meta}
-                        onPageChange={setPage}
-                        onPageSizeChange={(newLimit) => {
-                            setLimit(newLimit);
-                            setPage(1);
+                        data={attendanceData?.data || []}
+                        pagination={{
+                            page: page,
+                            limit: limit,
+                            total: attendanceData?.meta?.total || 0,
+                            totalPages: attendanceData?.meta?.totalPages || 1,
                         }}
+                        onPageChange={setPage}
+                        onPageSizeChange={setLimit}
                     />
                 )}
             </Card>

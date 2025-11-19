@@ -9,6 +9,7 @@ import {
   CreateUserDto,
   AdminEmployee,
   AdminEmployeeQueryParams,
+  AdminAttendanceQueryParams,
   EmployeeAttendanceQueryParams,
   EmployeeSalaryPaymentQueryParams,
   CreateAdminEmployeeDto,
@@ -65,6 +66,8 @@ export const adminKeys = {
     [...adminKeys.employee(id), "salary-payments", params] as const,
   allSalaryPayments: (params?: EmployeeSalaryPaymentQueryParams) =>
     [...adminKeys.employees(), "salary-payments", params] as const,
+  allAttendance: (params?: AdminAttendanceQueryParams) =>
+    [...adminKeys.employees(), "all-attendance", params] as const,
 
   blogs: () => [...adminKeys.all, "blogs"] as const,
   blogsList: (params?: any) => [...adminKeys.blogs(), "list", params] as const,
@@ -326,6 +329,18 @@ export const useAllSalaryPayments = (
   return useQuery({
     queryKey: adminKeys.allSalaryPayments(params),
     queryFn: () => adminApi.getAllSalaryPayments(params),
+    select: (data) => data.data,
+    enabled,
+  });
+};
+
+export const useAllAttendance = (
+  params?: AdminAttendanceQueryParams,
+  enabled: boolean = true,
+) => {
+  return useQuery({
+    queryKey: adminKeys.allAttendance(params),
+    queryFn: () => adminApi.getAllAttendance(params),
     select: (data) => data.data,
     enabled,
   });

@@ -592,6 +592,22 @@ export interface EmployeeAttendance {
   status: EmployeeAttendanceStatus;
   createdAt: string;
   updatedAt: string;
+  employee?: {
+    id: string;
+    name: string;
+    employeeCode?: string;
+    designation?: string;
+  };
+}
+
+export interface AdminAttendanceQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  date?: string;
+  fromDate?: string;
+  toDate?: string;
+  status?: EmployeeAttendanceStatus;
 }
 
 export type EmployeeSalaryPaymentStatus = "PENDING" | "PAID" | "CANCELLED";
@@ -873,6 +889,11 @@ export const adminApi = {
     apiClient
       .put(`/admin/employees/${id}/attendance`, data)
       .then((res) => res.data),
+
+  getAllAttendance: (
+    params?: AdminAttendanceQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<EmployeeAttendance>>> =>
+    apiClient.get("/admin/attendance", { params }).then((res) => res.data),
 
   getAllSalaryPayments: (
     params?: EmployeeSalaryPaymentQueryParams,
