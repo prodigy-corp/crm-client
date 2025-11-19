@@ -275,11 +275,11 @@ export function SalaryTab({ employeeId, canManage }: SalaryTabProps) {
         (acc, payment) => ({
             totalPaid:
                 acc.totalPaid +
-                (payment.status === "PAID" ? payment.netPayable : 0),
+                (payment.status === "PAID" ? Number(payment.netPayable || 0) : 0),
             totalPending:
                 acc.totalPending +
-                (payment.status === "PENDING" ? payment.netPayable : 0),
-            totalDeductions: acc.totalDeductions + payment.totalDeduction,
+                (payment.status === "PENDING" ? Number(payment.netPayable || 0) : 0),
+            totalDeductions: acc.totalDeductions + Number(payment.totalDeduction || 0),
         }),
         { totalPaid: 0, totalPending: 0, totalDeductions: 0 },
     );

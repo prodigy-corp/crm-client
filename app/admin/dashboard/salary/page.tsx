@@ -409,10 +409,10 @@ export default function SalaryPage() {
         return filteredData.reduce(
             (acc, payment) => {
                 return {
-                    base: acc.base + payment.basicSalary,
-                    gross: acc.gross + payment.grossSalary,
-                    deduction: acc.deduction + payment.totalDeduction,
-                    net: acc.net + payment.netPayable,
+                    base: acc.base + Number(payment.basicSalary || 0),
+                    gross: acc.gross + Number(payment.grossSalary || 0),
+                    deduction: acc.deduction + Number(payment.totalDeduction || 0),
+                    net: acc.net + Number(payment.netPayable || 0),
                 };
             },
             { base: 0, gross: 0, deduction: 0, net: 0 },
