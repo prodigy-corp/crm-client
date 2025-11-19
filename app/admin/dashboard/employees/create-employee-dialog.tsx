@@ -47,24 +47,24 @@ export function CreateEmployeeDialog({
   const handleInputChange = (
     field: keyof CreateAdminEmployeeDto,
   ) =>
-  (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    };
 
   const handleNumberChange = (
     field: keyof CreateAdminEmployeeDto,
   ) =>
-  (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value ? Number(value) : 0,
-    }));
-  };
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value ? Number(value) : 0,
+      }));
+    };
 
   const handleStatusChange = (value: EmployeeStatus) => {
     setFormData((prev) => ({
@@ -173,6 +173,20 @@ export function CreateEmployeeDialog({
                     <SelectItem value="RESIGNED">Resigned</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="userId">
+                  User Account ID (Optional)
+                </Label>
+                <Input
+                  id="userId"
+                  value={formData.userId || ""}
+                  onChange={handleInputChange("userId")}
+                  placeholder="Enter user ID to link to existing account"
+                />
+                <p className="text-xs text-muted-foreground">
+                  💡 Link this employee to an existing user account. The system will automatically assign the &quot;employee&quot; role.
+                </p>
               </div>
             </div>
           </div>
