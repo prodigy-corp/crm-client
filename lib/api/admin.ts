@@ -892,6 +892,15 @@ export const adminApi = {
       .post(`/admin/employees/${id}/salary/payments`, data)
       .then((res) => res.data),
 
+  updateEmployeeSalaryPaymentStatus: (
+    employeeId: string,
+    paymentId: string,
+    status: EmployeeSalaryPaymentStatus,
+  ): Promise<ApiResponse<EmployeeSalaryPayment>> =>
+    apiClient
+      .patch(`/admin/employees/${employeeId}/salary/payments/${paymentId}/status`, { status })
+      .then((res) => res.data),
+
   // Blogs Management
   getBlogs: (params?: any): Promise<ApiResponse<PaginatedResponse<BlogPost>>> =>
     apiClient.get("/admin/blogs", { params }).then((res) => res.data),

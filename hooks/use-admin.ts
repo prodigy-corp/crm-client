@@ -350,6 +350,30 @@ export const useCreateEmployeeSalaryPayment = () => {
   });
 };
 
+export const useUpdateEmployeeSalaryPaymentStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      employeeId,
+      paymentId,
+      status
+    }: {
+      employeeId: string;
+      paymentId: string;
+      status: "PENDING" | "PAID" | "CANCELLED";
+    }) => adminApi.updateEmployeeSalaryPaymentStatus(employeeId, paymentId, status),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.employeeSalaryPayments(variables.employeeId) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.employeeId) });
+      toast.success(data.message || "Salary payment status updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update salary payment status");
+    },
+  });
+};
+
 
 export const useUserLoginHistory = (id: string) => {
   return useQuery({

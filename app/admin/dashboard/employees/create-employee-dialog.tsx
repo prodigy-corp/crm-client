@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
+import { UserSelectDropdown } from "./user-select-dropdown";
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -176,13 +177,11 @@ export function CreateEmployeeDialog({
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="userId">
-                  User Account ID (Optional)
+                  Link to User Account (Optional)
                 </Label>
-                <Input
-                  id="userId"
-                  value={formData.userId || ""}
-                  onChange={handleInputChange("userId")}
-                  placeholder="Enter user ID to link to existing account"
+                <UserSelectDropdown
+                  value={formData.userId}
+                  onChange={(userId) => setFormData({ ...formData, userId })}
                 />
                 <p className="text-xs text-muted-foreground">
                   💡 Link this employee to an existing user account. The system will automatically assign the &quot;employee&quot; role.
