@@ -50,7 +50,7 @@ export const adminKeys = {
   dashboardStats: () => [...adminKeys.dashboard(), "stats"] as const,
   recentActivities: () => [...adminKeys.dashboard(), "recent-activities"] as const,
   analytics: () => [...adminKeys.dashboard(), "analytics"] as const,
-  
+
   users: () => [...adminKeys.all, "users"] as const,
   usersList: (params?: UserQueryParams) => [...adminKeys.users(), "list", params] as const,
   user: (id: string) => [...adminKeys.users(), "detail", id] as const,
@@ -63,35 +63,35 @@ export const adminKeys = {
     [...adminKeys.employee(id), "attendance", params] as const,
   employeeSalaryPayments: (id: string, params?: EmployeeSalaryPaymentQueryParams) =>
     [...adminKeys.employee(id), "salary-payments", params] as const,
-  
+
   blogs: () => [...adminKeys.all, "blogs"] as const,
   blogsList: (params?: any) => [...adminKeys.blogs(), "list", params] as const,
   blog: (id: string) => [...adminKeys.blogs(), "detail", id] as const,
   blogAnalytics: () => [...adminKeys.blogs(), "analytics"] as const,
-  
+
   roles: () => [...adminKeys.all, "roles"] as const,
   rolesList: () => [...adminKeys.roles(), "list"] as const,
   role: (id: string) => [...adminKeys.roles(), "detail", id] as const,
   permissions: () => [...adminKeys.roles(), "permissions"] as const,
-  
+
   system: () => [...adminKeys.all, "system"] as const,
   systemHealth: () => [...adminKeys.system(), "health"] as const,
   systemLogs: () => [...adminKeys.system(), "logs"] as const,
   auditLogs: () => [...adminKeys.system(), "audit-logs"] as const,
   databaseStats: () => [...adminKeys.system(), "database-stats"] as const,
-  
+
   cms: () => [...adminKeys.all, "cms"] as const,
   siteSettings: () => [...adminKeys.cms(), "site-settings"] as const,
   seoSettings: () => [...adminKeys.cms(), "seo-settings"] as const,
-  
+
   heroSections: () => [...adminKeys.cms(), "hero-sections"] as const,
   heroSectionsList: (params?: ContentQueryParams) => [...adminKeys.heroSections(), "list", params] as const,
   heroSection: (id: string) => [...adminKeys.heroSections(), "detail", id] as const,
-  
+
   banners: () => [...adminKeys.cms(), "banners"] as const,
   bannersList: (params?: ContentQueryParams) => [...adminKeys.banners(), "list", params] as const,
   banner: (id: string) => [...adminKeys.banners(), "detail", id] as const,
-  
+
   testimonials: () => [...adminKeys.cms(), "testimonials"] as const,
   testimonialsList: (params?: ContentQueryParams) => [...adminKeys.testimonials(), "list", params] as const,
   testimonial: (id: string) => [...adminKeys.testimonials(), "detail", id] as const,
@@ -153,12 +153,12 @@ export const useEmployees = (
   });
 };
 
-export const useEmployee = (id: string) => {
+export const useEmployee = (id: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: adminKeys.employee(id),
     queryFn: () => adminApi.getEmployeeById(id),
     select: (data) => data.data,
-    enabled: !!id,
+    enabled: !!id && enabled,
   });
 };
 
@@ -362,7 +362,7 @@ export const useUserLoginHistory = (id: string) => {
 
 export const useCreateUser = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateUserDto) => adminApi.createUser(data),
     onSuccess: (data) => {
@@ -378,7 +378,7 @@ export const useCreateUser = () => {
 
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
       adminApi.updateUser(id, data),
@@ -395,7 +395,7 @@ export const useUpdateUser = () => {
 
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.deleteUser(id),
     onSuccess: (data) => {
@@ -411,7 +411,7 @@ export const useDeleteUser = () => {
 
 export const useBlockUser = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.blockUser(id),
     onSuccess: (data, id) => {
@@ -427,7 +427,7 @@ export const useBlockUser = () => {
 
 export const useUnblockUser = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.unblockUser(id),
     onSuccess: (data, id) => {
@@ -443,7 +443,7 @@ export const useUnblockUser = () => {
 
 export const useVerifyUserEmail = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.verifyUserEmail(id),
     onSuccess: (data, id) => {
@@ -487,7 +487,7 @@ export const useBlogAnalytics = (enabled: boolean = true) => {
 
 export const useCreateBlog = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateBlogDto) => adminApi.createBlog(data),
     onSuccess: (data) => {
@@ -503,7 +503,7 @@ export const useCreateBlog = () => {
 
 export const useUpdateBlog = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBlogDto }) =>
       adminApi.updateBlog(id, data),
@@ -520,7 +520,7 @@ export const useUpdateBlog = () => {
 
 export const useUpdateBlogStatus = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       adminApi.updateBlogStatus(id, status),
@@ -537,7 +537,7 @@ export const useUpdateBlogStatus = () => {
 
 export const useDeleteBlog = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.deleteBlog(id),
     onSuccess: (data) => {
@@ -579,7 +579,7 @@ export const usePermissions = () => {
 
 export const useCreateRole = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateRoleDto) => adminApi.createRole(data),
     onSuccess: (data) => {
@@ -594,7 +594,7 @@ export const useCreateRole = () => {
 
 export const useUpdateRole = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateRoleDto }) =>
       adminApi.updateRole(id, data),
@@ -611,7 +611,7 @@ export const useUpdateRole = () => {
 
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.deleteRole(id),
     onSuccess: (data) => {
@@ -660,7 +660,7 @@ export const useDatabaseStats = () => {
 
 export const useClearCache = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: () => adminApi.clearCache(),
     onSuccess: (data) => {
@@ -684,7 +684,7 @@ export const useSiteSettings = (enabled: boolean = true) => {
 
 export const useUpdateSiteSettings = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: UpdateSiteSettingsDto) => adminApi.updateSiteSettings(data),
     onSuccess: (data) => {
@@ -708,7 +708,7 @@ export const useSEOSettings = (enabled: boolean = true) => {
 
 export const useUpdateSEOSettings = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: UpdateSEOSettingsDto) => adminApi.updateSEOSettings(data),
     onSuccess: () => {
@@ -815,7 +815,7 @@ export const useHeroSection = (id: string) => {
 
 export const useCreateHeroSection = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateHeroSectionDto) => adminApi.createHeroSection(data),
     onSuccess: (data) => {
@@ -830,7 +830,7 @@ export const useCreateHeroSection = () => {
 
 export const useUpdateHeroSection = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateHeroSectionDto }) =>
       adminApi.updateHeroSection(id, data),
@@ -847,7 +847,7 @@ export const useUpdateHeroSection = () => {
 
 export const useDeleteHeroSection = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.deleteHeroSection(id),
     onSuccess: (data) => {
@@ -862,7 +862,7 @@ export const useDeleteHeroSection = () => {
 
 export const useReorderHeroSections = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (ids: string[]) => adminApi.reorderHeroSections(ids),
     onSuccess: (data) => {
@@ -896,7 +896,7 @@ export const useBanner = (id: string) => {
 
 export const useCreateBanner = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateBannerDto) => adminApi.createBanner(data),
     onSuccess: (data) => {
@@ -911,7 +911,7 @@ export const useCreateBanner = () => {
 
 export const useUpdateBanner = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBannerDto }) =>
       adminApi.updateBanner(id, data),
@@ -928,7 +928,7 @@ export const useUpdateBanner = () => {
 
 export const useDeleteBanner = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.deleteBanner(id),
     onSuccess: (data) => {
@@ -943,7 +943,7 @@ export const useDeleteBanner = () => {
 
 export const useReorderBanners = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (ids: string[]) => adminApi.reorderBanners(ids),
     onSuccess: (data) => {
@@ -977,7 +977,7 @@ export const useTestimonial = (id: string) => {
 
 export const useCreateTestimonial = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: CreateTestimonialDto) => adminApi.createTestimonial(data),
     onSuccess: (data) => {
@@ -992,7 +992,7 @@ export const useCreateTestimonial = () => {
 
 export const useUpdateTestimonial = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTestimonialDto }) =>
       adminApi.updateTestimonial(id, data),
@@ -1009,7 +1009,7 @@ export const useUpdateTestimonial = () => {
 
 export const useDeleteTestimonial = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: string) => adminApi.deleteTestimonial(id),
     onSuccess: (data) => {
@@ -1024,7 +1024,7 @@ export const useDeleteTestimonial = () => {
 
 export const useReorderTestimonials = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (ids: string[]) => adminApi.reorderTestimonials(ids),
     onSuccess: (data) => {

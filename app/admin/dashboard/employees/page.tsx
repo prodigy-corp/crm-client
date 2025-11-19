@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -47,15 +48,12 @@ import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { CreateEmployeeDialog } from "./create-employee-dialog";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
-import { ViewEmployeeDialog } from "./view-employee-dialog";
 
 const AdminEmployeesPage = () => {
+  const router = useRouter();
   const { user, isLoading: isAuthLoading, isError: isAuthError } = useAuth();
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<AdminEmployee | null>(
-    null,
-  );
-  const [viewingEmployee, setViewingEmployee] = useState<AdminEmployee | null>(
     null,
   );
   const [searchTerm, setSearchTerm] = useState("");
@@ -204,7 +202,7 @@ const AdminEmployeesPage = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setViewingEmployee(employee)}>
+              <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/employees/${employee.id}`)}>
                 <LuEye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
@@ -367,12 +365,6 @@ const AdminEmployeesPage = () => {
         employee={editingEmployee}
         open={!!editingEmployee}
         onOpenChange={(open) => !open && setEditingEmployee(null)}
-      />
-
-      <ViewEmployeeDialog
-        employee={viewingEmployee}
-        open={!!viewingEmployee}
-        onOpenChange={(open) => !open && setViewingEmployee(null)}
       />
     </div>
   );
