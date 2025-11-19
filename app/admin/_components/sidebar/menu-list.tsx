@@ -5,8 +5,8 @@ export const menuList = [
     id: 1,
     title: "Admin Overview",
     icon: <LuLayoutGrid className="icon" />,
-    url: "/admin/dashboard",
-    baseUrl: "/admin/dashboard",
+    url: "/admin",
+    baseUrl: "/admin",
   },
   {
     id: 2,
