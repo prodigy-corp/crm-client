@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -241,15 +241,9 @@ export default function SalaryPage() {
         {
             id: "status",
             header: "Status",
-            cell: () => {
-                // Mock status - in production, fetch from salary payment records
-                const statuses: EmployeeSalaryPaymentStatus[] = [
-                    "PAID",
-                    "PENDING",
-                ];
-                const randomStatus =
-                    statuses[Math.floor(Math.random() * statuses.length)];
-                return getStatusBadge(randomStatus);
+            cell: ({ row }) => {
+                const mockStatus = getEmployeeMockStatus(row.original.id);
+                return getStatusBadge(mockStatus);
             },
         },
         {
@@ -335,17 +329,30 @@ export default function SalaryPage() {
         URL.revokeObjectURL(url);
     };
 
-    // Filter employees based on search
-    const filteredData = employeesData?.data?.filter((emp) => {
-        const matchesSearch =
-            !searchTerm ||
-            emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            emp.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
+    // Generate consistent mock salary payment status per employee
+    const getEmployeeMockStatus = (employeeId: string): EmployeeSalaryPaymentStatus => {
+        const seed = employeeId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const statuses: EmployeeSalaryPaymentStatus[] = ["PAID", "PENDING", "CANCELLED"];
+        return statuses[seed % statuses.length];
+    };
 
-        return matchesSearch;
-    });
+    // Filter employees based on search and status
+    const filteredData = useMemo(() => {
+        return employeesData?.data?.filter((emp) => {
+            const matchesSearch =
+                !searchTerm ||
+                emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                emp.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Calculate totals
+            // Filter by payment status (using mock data)
+            const mockStatus = getEmployeeMockStatus(emp.id);
+            const matchesStatus = statusFilter === "ALL" || mockStatus === statusFilter;
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [employeesData?.data, searchTerm, statusFilter]);
+
+    // Calculate totals from filtered data
     const calculateTotals = () => {
         if (!filteredData) return { base: 0, gross: 0, deduction: 0, net: 0 };
 
@@ -366,7 +373,9 @@ export default function SalaryPage() {
         );
     };
 
-    const totals = calculateTotals();
+    const totals = useMemo(() => {
+        return calculateTotals();
+    }, [filteredData]);
 
     if (isAuthLoading) {
         return (
@@ -662,7 +671,7 @@ export default function SalaryPage() {
                     </h3>
                     {employeesData?.meta && (
                         <p className="text-sm text-muted-foreground">
-                            Total: {filteredData?.length || 0} employees
+                            Showing: {filteredData?.length || 0} / {employeesData.meta.total} employees
                         </p>
                     )}
                 </div>

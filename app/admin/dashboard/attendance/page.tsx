@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -151,6 +151,66 @@ export default function AttendancePage() {
         !isAuthLoading && !!user && canViewAttendance,
     );
 
+    // Generate consistent mock attendance data per employee
+    const getEmployeeMockData = (employeeId: string) => {
+        // Use employee ID to generate consistent mock data
+        const seed = employeeId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const statuses: EmployeeAttendanceStatus[] = ["PRESENT", "ABSENT", "LATE", "ON_LEAVE"];
+        const statusIndex = seed % statuses.length;
+
+        return {
+            status: statuses[statusIndex],
+            checkIn: `${(9 + (seed % 2)).toString().padStart(2, "0")}:${((seed * 7) % 60).toString().padStart(2, "0")} AM`,
+            checkOut: `${(5 + (seed % 3)).toString().padStart(2, "0")}:${((seed * 11) % 60).toString().padStart(2, "0")} PM`,
+            workingHours: (7 + ((seed % 20) / 10)).toFixed(2),
+        };
+    };
+
+    // Filter employees based on search, status, and date range
+    const filteredData = useMemo(() => {
+        return employeesData?.data?.filter((emp) => {
+            const matchesSearch =
+                !searchTerm ||
+                emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                emp.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // Filter by status (using mock data)
+            const mockData = getEmployeeMockData(emp.id);
+            const matchesStatus = statusFilter === "ALL" || mockData.status === statusFilter;
+
+            // Date range filtering note:
+            // In production, you'd compare attendance record dates with dateRange.from/to
+            // For now, we'll allow all dates since we don't have real attendance records
+            const matchesDateRange = true; // All mock data is considered "today"
+
+            return matchesSearch && matchesStatus && matchesDateRange;
+        });
+    }, [employeesData?.data, searchTerm, statusFilter, dateRange]);
+
+    // Calculate stats from filtered data
+    const stats = useMemo(() => {
+        if (!filteredData) return { present: 0, absent: 0, late: 0, onLeave: 0 };
+
+        return filteredData.reduce((acc, emp) => {
+            const mockData = getEmployeeMockData(emp.id);
+            switch (mockData.status) {
+                case "PRESENT":
+                    acc.present++;
+                    break;
+                case "ABSENT":
+                    acc.absent++;
+                    break;
+                case "LATE":
+                    acc.late++;
+                    break;
+                case "ON_LEAVE":
+                    acc.onLeave++;
+                    break;
+            }
+            return acc;
+        }, { present: 0, absent: 0, late: 0, onLeave: 0 });
+    }, [filteredData]);
+
     const getStatusBadge = (status: EmployeeAttendanceStatus) => {
         const variants: Record<EmployeeAttendanceStatus, string> = {
             PRESENT:
@@ -204,29 +264,19 @@ export default function AttendancePage() {
             id: "status",
             header: "Status",
             cell: ({ row }) => {
-                // Mock status - in production, you'd fetch this from attendance records
-                const statuses: EmployeeAttendanceStatus[] = [
-                    "PRESENT",
-                    "ABSENT",
-                    "LATE",
-                    "ON_LEAVE",
-                ];
-                const randomStatus =
-                    statuses[Math.floor(Math.random() * statuses.length)];
-                return getStatusBadge(randomStatus);
+                const mockData = getEmployeeMockData(row.original.id);
+                return getStatusBadge(mockData.status);
             },
         },
         {
             id: "checkIn",
             header: "Check In",
-            cell: () => {
-                // Mock data - in production, fetch from attendance
-                const hour = 9 + Math.floor(Math.random() * 2);
-                const minute = Math.floor(Math.random() * 60);
+            cell: ({ row }) => {
+                const mockData = getEmployeeMockData(row.original.id);
                 return (
                     <div className="flex items-center gap-1 text-sm">
                         <LuLogIn className="h-3 w-3 text-green-600" />
-                        {`${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} AM`}
+                        {mockData.checkIn}
                     </div>
                 );
             },
@@ -234,14 +284,12 @@ export default function AttendancePage() {
         {
             id: "checkOut",
             header: "Check Out",
-            cell: () => {
-                // Mock data - in production, fetch from attendance
-                const hour = 5 + Math.floor(Math.random() * 3);
-                const minute = Math.floor(Math.random() * 60);
+            cell: ({ row }) => {
+                const mockData = getEmployeeMockData(row.original.id);
                 return (
                     <div className="flex items-center gap-1 text-sm">
                         <LuLogOut className="h-3 w-3 text-red-600" />
-                        {`${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} PM`}
+                        {mockData.checkOut}
                     </div>
                 );
             },
@@ -249,10 +297,9 @@ export default function AttendancePage() {
         {
             id: "workingHours",
             header: "Working Hours",
-            cell: () => {
-                // Mock data - in production, calculate from attendance
-                const hours = (7 + Math.random() * 2).toFixed(2);
-                return <span className="text-sm font-medium">{hours} hrs</span>;
+            cell: ({ row }) => {
+                const mockData = getEmployeeMockData(row.original.id);
+                return <span className="text-sm font-medium">{mockData.workingHours} hrs</span>;
             },
         },
         {
@@ -293,7 +340,7 @@ export default function AttendancePage() {
     ];
 
     const handleExport = () => {
-        if (!employeesData?.data) return;
+        if (!filteredData) return;
 
         const csv = [
             [
@@ -306,16 +353,19 @@ export default function AttendancePage() {
                 "Working Hours",
                 "Status",
             ],
-            ...employeesData.data.map((emp) => [
-                emp.name,
-                emp.employeeCode || "",
-                emp.designation || "",
-                dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "",
-                "09:15 AM", // Mock
-                "06:30 PM", // Mock
-                "8.25", // Mock
-                "PRESENT", // Mock
-            ]),
+            ...filteredData.map((emp) => {
+                const mockData = getEmployeeMockData(emp.id);
+                return [
+                    emp.name,
+                    emp.employeeCode || "",
+                    emp.designation || "",
+                    dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "",
+                    mockData.checkIn,
+                    mockData.checkOut,
+                    mockData.workingHours,
+                    mockData.status,
+                ];
+            }),
         ]
             .map((row) => row.join(","))
             .join("\n");
@@ -328,17 +378,6 @@ export default function AttendancePage() {
         a.click();
         URL.revokeObjectURL(url);
     };
-
-    // Filter employees based on search and status
-    const filteredData = employeesData?.data?.filter((emp) => {
-        const matchesSearch =
-            !searchTerm ||
-            emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            emp.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // In production, you'd filter by actual status from attendance records
-        return matchesSearch;
-    });
 
     if (isAuthLoading) {
         return (
@@ -420,7 +459,7 @@ export default function AttendancePage() {
                                 Present
                             </p>
                             <p className="text-2xl font-semibold">
-                                {filteredData?.length || 0}
+                                {stats.present}
                             </p>
                         </div>
                     </div>
@@ -434,7 +473,7 @@ export default function AttendancePage() {
                             <p className="text-sm text-muted-foreground">
                                 Absent
                             </p>
-                            <p className="text-2xl font-semibold">0</p>
+                            <p className="text-2xl font-semibold">{stats.absent}</p>
                         </div>
                     </div>
                 </Card>
@@ -447,7 +486,7 @@ export default function AttendancePage() {
                             <p className="text-sm text-muted-foreground">
                                 Late
                             </p>
-                            <p className="text-2xl font-semibold">0</p>
+                            <p className="text-2xl font-semibold">{stats.late}</p>
                         </div>
                     </div>
                 </Card>
@@ -460,7 +499,7 @@ export default function AttendancePage() {
                             <p className="text-sm text-muted-foreground">
                                 On Leave
                             </p>
-                            <p className="text-2xl font-semibold">0</p>
+                            <p className="text-2xl font-semibold">{stats.onLeave}</p>
                         </div>
                     </div>
                 </Card>
@@ -631,7 +670,7 @@ export default function AttendancePage() {
                     </h3>
                     {employeesData?.meta && (
                         <p className="text-sm text-muted-foreground">
-                            Total: {filteredData?.length || 0} employees
+                            Showing: {filteredData?.length || 0} / {employeesData.meta.total} employees
                         </p>
                     )}
                 </div>
