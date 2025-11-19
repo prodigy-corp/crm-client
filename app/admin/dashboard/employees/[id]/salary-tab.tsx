@@ -30,6 +30,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { useUpdateEmployeeSalaryPaymentStatus } from "@/hooks/use-admin";
 
 interface SalaryTabProps {
     employeeId: string;
@@ -58,6 +66,31 @@ export function SalaryTab({ employeeId, canManage }: SalaryTabProps) {
         isLoading,
         error,
     } = useEmployeeSalaryPayments(employeeId, queryParams);
+
+    const updateStatusMutation = useUpdateEmployeeSalaryPaymentStatus();
+
+    const handleStatusUpdate = (
+        paymentId: string,
+        newStatus: EmployeeSalaryPaymentStatus,
+    ) => {
+        updateStatusMutation.mutate(
+            {
+                employeeId,
+                paymentId,
+                status: newStatus,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(`Payment status updated to ${newStatus}`);
+                },
+                onError: (error: any) => {
+                    toast.error(
+                        error.message || "Failed to update payment status",
+                    );
+                },
+            },
+        );
+    };
 
     const getStatusBadge = (status: EmployeeSalaryPaymentStatus) => {
         const variants: Record<EmployeeSalaryPaymentStatus, string> = {
@@ -149,7 +182,54 @@ export function SalaryTab({ employeeId, canManage }: SalaryTabProps) {
         {
             accessorKey: "status",
             header: "Status",
-            cell: ({ row }) => getStatusBadge(row.original.status),
+            cell: ({ row }) => {
+                const payment = row.original;
+                if (!canManage) {
+                    return getStatusBadge(payment.status);
+                }
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
+                                {getStatusBadge(payment.status)}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleStatusUpdate(
+                                        payment.id,
+                                        "PAID",
+                                    )
+                                }
+                            >
+                                Mark as Paid
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleStatusUpdate(
+                                        payment.id,
+                                        "PENDING",
+                                    )
+                                }
+                            >
+                                Mark as Pending
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleStatusUpdate(
+                                        payment.id,
+                                        "CANCELLED",
+                                    )
+                                }
+                                className="text-destructive"
+                            >
+                                Cancel Payment
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
         },
     ];
 

@@ -21,6 +21,13 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     LuDollarSign,
     LuSearch,
@@ -36,17 +43,14 @@ import {
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import {
-    AdminEmployee,
+    EmployeeSalaryPayment,
     EmployeeSalaryPaymentStatus,
 } from "@/lib/api/admin";
-import { useEmployees } from "@/hooks/use-admin";
+import { useAllSalaryPayments, useUpdateEmployeeSalaryPaymentStatus } from "@/hooks/use-admin";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-type DateRange = {
-    from: Date | undefined;
-    to: Date | undefined;
-};
+import { toast } from "sonner";
+import { DateRange } from "react-day-picker";
 
 const dateRangePresets = [
     {
@@ -115,7 +119,7 @@ export default function SalaryPage() {
     const [statusFilter, setStatusFilter] = useState<
         EmployeeSalaryPaymentStatus | "ALL"
     >("ALL");
-    const [dateRange, setDateRange] = useState<DateRange>({
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: startOfMonth(new Date()),
         to: endOfMonth(new Date()),
     });
@@ -125,20 +129,43 @@ export default function SalaryPage() {
     );
 
     const {
-        data: employeesData,
+        data: salaryData,
         isLoading,
         error,
-    } = useEmployees(
+    } = useAllSalaryPayments(
         {
             page,
             limit,
-            search: searchTerm || undefined,
-            status: "ACTIVE",
-            sortBy: "name",
-            sortOrder: "asc",
+            status: statusFilter === "ALL" ? undefined : statusFilter,
         },
         !isAuthLoading && !!user && canViewSalary,
     );
+
+    const updateStatusMutation = useUpdateEmployeeSalaryPaymentStatus();
+
+    const handleStatusUpdate = (
+        employeeId: string,
+        paymentId: string,
+        newStatus: EmployeeSalaryPaymentStatus,
+    ) => {
+        updateStatusMutation.mutate(
+            {
+                employeeId,
+                paymentId,
+                status: newStatus,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(`Payment status updated to ${newStatus}`);
+                },
+                onError: (error: any) => {
+                    toast.error(
+                        error.message || "Failed to update payment status",
+                    );
+                },
+            },
+        );
+    };
 
     const getStatusBadge = (status: EmployeeSalaryPaymentStatus) => {
         const variants: Record<EmployeeSalaryPaymentStatus, string> = {
@@ -156,23 +183,23 @@ export default function SalaryPage() {
         );
     };
 
-    const columns: ColumnDef<AdminEmployee>[] = [
+    const columns: ColumnDef<EmployeeSalaryPayment>[] = [
         {
-            accessorKey: "name",
+            accessorKey: "employee.name",
             header: "Employee",
             cell: ({ row }) => {
-                const employee = row.original;
+                const employee = row.original.employee;
                 return (
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                             <span className="text-sm font-medium text-primary">
-                                {employee.name.charAt(0).toUpperCase()}
+                                {employee?.name?.charAt(0).toUpperCase() || "?"}
                             </span>
                         </div>
                         <div>
-                            <div className="font-medium">{employee.name}</div>
+                            <div className="font-medium">{employee?.name || "Unknown"}</div>
                             <div className="text-sm text-muted-foreground">
-                                {employee.employeeCode || "—"}
+                                {employee?.employeeCode || "—"}
                             </div>
                         </div>
                     </div>
@@ -180,80 +207,110 @@ export default function SalaryPage() {
             },
         },
         {
-            accessorKey: "designation",
+            accessorKey: "employee.designation",
             header: "Designation",
             cell: ({ row }) => (
                 <span className="text-sm">
-                    {row.original.designation || "—"}
+                    {row.original.employee?.designation || "—"}
                 </span>
             ),
         },
         {
-            accessorKey: "baseSalary",
+            accessorKey: "basicSalary",
             header: "Base Salary",
             cell: ({ row }) => (
                 <span className="text-sm font-medium">
-                    ৳{row.original.baseSalary.toLocaleString()}
+                    ৳{row.original.basicSalary.toLocaleString()}
                 </span>
             ),
         },
         {
-            id: "grossSalary",
+            accessorKey: "grossSalary",
             header: "Gross Salary",
-            cell: ({ row }) => {
-                // Mock calculation - in production, fetch from salary records
-                const gross = row.original.baseSalary * 1.05; // 5% bonus
-                return (
-                    <span className="text-sm font-medium">
-                        ৳{gross.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </span>
-                );
-            },
+            cell: ({ row }) => (
+                <span className="text-sm font-medium">
+                    ৳{row.original.grossSalary.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+            ),
         },
         {
-            id: "deductions",
+            accessorKey: "totalDeduction",
             header: "Deductions",
-            cell: ({ row }) => {
-                // Mock deduction
-                const deduction = row.original.baseSalary * 0.05; // 5% deduction
-                return (
-                    <span className="text-sm text-red-600">
-                        -৳{deduction.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </span>
-                );
-            },
+            cell: ({ row }) => (
+                <span className="text-sm text-red-600">
+                    -৳{row.original.totalDeduction.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+            ),
         },
         {
-            id: "netPayable",
+            accessorKey: "netPayable",
             header: "Net Payable",
-            cell: ({ row }) => {
-                // Mock calculation
-                const gross = row.original.baseSalary * 1.05;
-                const deduction = row.original.baseSalary * 0.05;
-                const net = gross - deduction;
-                return (
-                    <span className="text-sm font-semibold text-green-600">
-                        ৳{net.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </span>
-                );
-            },
+            cell: ({ row }) => (
+                <span className="text-sm font-semibold text-green-600">
+                    ৳{row.original.netPayable.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+            ),
         },
         {
-            id: "status",
+            accessorKey: "status",
             header: "Status",
             cell: ({ row }) => {
-                const mockStatus = getEmployeeMockStatus(row.original.id);
-                return getStatusBadge(mockStatus);
+                const payment = row.original;
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
+                                {getStatusBadge(payment.status)}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleStatusUpdate(
+                                        payment.employeeId,
+                                        payment.id,
+                                        "PAID",
+                                    )
+                                }
+                            >
+                                Mark as Paid
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleStatusUpdate(
+                                        payment.employeeId,
+                                        payment.id,
+                                        "PENDING",
+                                    )
+                                }
+                            >
+                                Mark as Pending
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    handleStatusUpdate(
+                                        payment.employeeId,
+                                        payment.id,
+                                        "CANCELLED",
+                                    )
+                                }
+                                className="text-destructive"
+                            >
+                                Cancel Payment
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
             },
         },
         {
-            id: "paymentDate",
+            accessorKey: "paymentDate",
             header: "Payment Date",
-            cell: () => {
-                // Mock date
+            cell: ({ row }) => {
+                const date = row.original.paymentDate;
                 return (
                     <span className="text-sm text-muted-foreground">
-                        {format(new Date(), "MMM dd, yyyy")}
+                        {date ? format(new Date(date), "MMM dd, yyyy") : "—"}
                     </span>
                 );
             },
@@ -262,24 +319,45 @@ export default function SalaryPage() {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => {
-                const employee = row.original;
+                const payment = row.original;
                 return (
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() =>
                             router.push(
-                                `/admin/dashboard/employees/${employee.id}?tab=salary`,
+                                `/admin/dashboard/employees/${payment.employeeId}?tab=salary`,
                             )
                         }
                     >
                         <LuEye className="mr-2 h-4 w-4" />
-                        View Details
+                        Details
                     </Button>
                 );
             },
         },
     ];
+
+    // Filter data based on search term and date range
+    // Note: Ideally this filtering should happen on the backend
+    const filteredData = useMemo(() => {
+        return salaryData?.data?.filter((payment) => {
+            const matchesSearch =
+                !searchTerm ||
+                payment.employee?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                payment.employee?.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
+
+            let matchesDate = true;
+            if (dateRange?.from && dateRange?.to) {
+                const paymentDate = payment.paymentDate ? new Date(payment.paymentDate) : new Date(payment.year, payment.month - 1);
+                matchesDate =
+                    paymentDate >= dateRange.from &&
+                    paymentDate <= dateRange.to;
+            }
+
+            return matchesSearch && matchesDate;
+        });
+    }, [salaryData?.data, searchTerm, dateRange]);
 
     const handleExport = () => {
         if (!filteredData) return;
@@ -295,25 +373,20 @@ export default function SalaryPage() {
                 "Net Payable",
                 "Status",
                 "Payment Date",
-                "Period",
+                "Month/Year",
             ],
-            ...filteredData.map((emp) => {
-                const gross = emp.baseSalary * 1.05;
-                const deduction = emp.baseSalary * 0.05;
-                const net = gross - deduction;
+            ...filteredData.map((payment) => {
                 return [
-                    emp.name,
-                    emp.employeeCode || "",
-                    emp.designation || "",
-                    emp.baseSalary.toString(),
-                    gross.toFixed(2),
-                    deduction.toFixed(2),
-                    net.toFixed(2),
-                    "PAID", // Mock
-                    format(new Date(), "yyyy-MM-dd"),
-                    dateRange.from && dateRange.to
-                        ? `${format(dateRange.from, "MMM dd")} - ${format(dateRange.to, "MMM dd, yyyy")}`
-                        : "All Time",
+                    payment.employee?.name || "",
+                    payment.employee?.employeeCode || "",
+                    payment.employee?.designation || "",
+                    payment.basicSalary.toString(),
+                    payment.grossSalary.toString(),
+                    payment.totalDeduction.toString(),
+                    payment.netPayable.toString(),
+                    payment.status,
+                    payment.paymentDate ? format(new Date(payment.paymentDate), "yyyy-MM-dd") : "",
+                    `${payment.month}/${payment.year}`,
                 ];
             }),
         ]
@@ -324,49 +397,22 @@ export default function SalaryPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `salary-${dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "all"}.csv`;
+        a.download = `salary-${dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "all"}.csv`;
         a.click();
         URL.revokeObjectURL(url);
     };
-
-    // Generate consistent mock salary payment status per employee
-    const getEmployeeMockStatus = (employeeId: string): EmployeeSalaryPaymentStatus => {
-        const seed = employeeId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const statuses: EmployeeSalaryPaymentStatus[] = ["PAID", "PENDING", "CANCELLED"];
-        return statuses[seed % statuses.length];
-    };
-
-    // Filter employees based on search and status
-    const filteredData = useMemo(() => {
-        return employeesData?.data?.filter((emp) => {
-            const matchesSearch =
-                !searchTerm ||
-                emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                emp.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
-
-            // Filter by payment status (using mock data)
-            const mockStatus = getEmployeeMockStatus(emp.id);
-            const matchesStatus = statusFilter === "ALL" || mockStatus === statusFilter;
-
-            return matchesSearch && matchesStatus;
-        });
-    }, [employeesData?.data, searchTerm, statusFilter]);
 
     // Calculate totals from filtered data
     const calculateTotals = () => {
         if (!filteredData) return { base: 0, gross: 0, deduction: 0, net: 0 };
 
         return filteredData.reduce(
-            (acc, emp) => {
-                const gross = emp.baseSalary * 1.05;
-                const deduction = emp.baseSalary * 0.05;
-                const net = gross - deduction;
-
+            (acc, payment) => {
                 return {
-                    base: acc.base + emp.baseSalary,
-                    gross: acc.gross + gross,
-                    deduction: acc.deduction + deduction,
-                    net: acc.net + net,
+                    base: acc.base + payment.basicSalary,
+                    gross: acc.gross + payment.grossSalary,
+                    deduction: acc.deduction + payment.totalDeduction,
+                    net: acc.net + payment.netPayable,
                 };
             },
             { base: 0, gross: 0, deduction: 0, net: 0 },
@@ -378,6 +424,14 @@ export default function SalaryPage() {
     }, [filteredData]);
 
     if (isAuthLoading) {
+        return (
+            <div className="flex h-64 items-center justify-center">
+                <Spinner className="h-8 w-8" />
+            </div>
+        );
+    }
+
+    if (isLoading) {
         return (
             <div className="flex h-64 items-center justify-center">
                 <Spinner className="h-8 w-8" />
@@ -445,253 +499,203 @@ export default function SalaryPage() {
                 </div>
             </div>
 
+            <Alert>
+                <LuInfo className="h-4 w-4" />
+                <AlertDescription>
+                    This page shows actual salary payment records. You can update the status of each payment directly from the table.
+                </AlertDescription>
+            </Alert>
+
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-4">
                 <Card className="p-6">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
-                            <LuDollarSign className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <LuDollarSign className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
-                                Total Base Salary
+                            <p className="text-sm font-medium text-muted-foreground">
+                                Total Net Payable
                             </p>
-                            <p className="text-2xl font-semibold">
-                                ৳{totals.base.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </p>
+                            <h3 className="text-2xl font-bold">
+                                ৳{totals.net.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </h3>
                         </div>
                     </div>
                 </Card>
                 <Card className="p-6">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
-                            <LuTrendingUp className="h-6 w-6 text-green-600 dark:text-green-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300">
+                            <LuCreditCard className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
-                                Gross Payable
+                            <p className="text-sm font-medium text-muted-foreground">
+                                Total Gross Salary
                             </p>
-                            <p className="text-2xl font-semibold">
+                            <h3 className="text-2xl font-bold">
                                 ৳{totals.gross.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </p>
+                            </h3>
                         </div>
                     </div>
                 </Card>
                 <Card className="p-6">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900">
-                            <LuDollarSign className="h-6 w-6 text-red-600 dark:text-red-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300">
+                            <LuTrendingUp className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm font-medium text-muted-foreground">
                                 Total Deductions
                             </p>
-                            <p className="text-2xl font-semibold">
+                            <h3 className="text-2xl font-bold">
                                 ৳{totals.deduction.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </p>
+                            </h3>
                         </div>
                     </div>
                 </Card>
                 <Card className="p-6">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900">
-                            <LuCreditCard className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+                            <LuCalendar className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">
-                                Net Payable
+                            <p className="text-sm font-medium text-muted-foreground">
+                                Total Base Salary
                             </p>
-                            <p className="text-2xl font-semibold">
-                                ৳{totals.net.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </p>
+                            <h3 className="text-2xl font-bold">
+                                ৳{totals.base.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </h3>
                         </div>
                     </div>
                 </Card>
             </div>
 
-            {/* Filters and Table */}
-            <Card className="p-6">
-                <div className="mb-6 space-y-4">
-                    <div className="flex items-center gap-2">
-                        <LuFilter className="h-4 w-4 text-muted-foreground" />
-                        <h3 className="text-sm font-medium">
-                            Filters & Search
-                        </h3>
+            {/* Filters */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-1 items-center gap-4">
+                    <div className="relative w-full md:w-72">
+                        <LuSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search employees..."
+                            className="pl-9"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                    <div className="grid gap-4 md:grid-cols-4">
-                        <div className="space-y-2 md:col-span-2">
-                            <label className="text-sm font-medium">
-                                Payment Period
-                            </label>
-                            <div className="flex gap-2">
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className={cn(
-                                                "flex-1 justify-start text-left font-normal",
-                                                !dateRange.from && "text-muted-foreground",
-                                            )}
-                                        >
-                                            <LuCalendar className="mr-2 h-4 w-4" />
-                                            {dateRange.from ? (
-                                                dateRange.to ? (
-                                                    <>
-                                                        {format(dateRange.from, "LLL dd, y")} -{" "}
-                                                        {format(dateRange.to, "LLL dd, y")}
-                                                    </>
-                                                ) : (
-                                                    format(dateRange.from, "LLL dd, y")
-                                                )
-                                            ) : (
-                                                <span>Pick a date range</span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <div className="flex flex-col sm:flex-row">
-                                            <div className="border-b sm:border-b-0 sm:border-r bg-muted/30 p-3">
-                                                <p className="text-xs font-semibold uppercase text-muted-foreground mb-3">
-                                                    Quick Select
-                                                </p>
-                                                <div className="space-y-1">
-                                                    {dateRangePresets.map((preset) => (
-                                                        <Button
-                                                            key={preset.label}
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="w-full justify-start font-normal hover:bg-primary/10"
-                                                            onClick={() => {
-                                                                setDateRange(preset.getValue());
-                                                            }}
-                                                        >
-                                                            {preset.label}
-                                                        </Button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="p-3">
-                                                <Calendar
-                                                    mode="range"
-                                                    selected={{
-                                                        from: dateRange.from,
-                                                        to: dateRange.to,
-                                                    }}
-                                                    onSelect={(range: any) => {
-                                                        setDateRange({
-                                                            from: range?.from,
-                                                            to: range?.to,
-                                                        });
-                                                    }}
-                                                    numberOfMonths={2}
-                                                />
-                                            </div>
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
-                                {dateRange.from && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                            setDateRange({ from: undefined, to: undefined })
-                                        }
-                                    >
-                                        <LuX className="h-4 w-4" />
-                                    </Button>
+                    <Select
+                        value={statusFilter}
+                        onValueChange={(value) =>
+                            setStatusFilter(
+                                value as EmployeeSalaryPaymentStatus | "ALL",
+                            )
+                        }
+                    >
+                        <SelectTrigger className="w-[180px]">
+                            <LuFilter className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL">All Status</SelectItem>
+                            <SelectItem value="PAID">Paid</SelectItem>
+                            <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    "w-[240px] justify-start text-left font-normal",
+                                    !dateRange && "text-muted-foreground",
                                 )}
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">
-                                Search
-                            </label>
-                            <div className="relative">
-                                <LuSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search employees..."
-                                    value={searchTerm}
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        setPage(1);
-                                    }}
-                                    className="pl-10"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">
-                                Status
-                            </label>
-                            <Select
-                                value={statusFilter}
-                                onValueChange={(value) => {
-                                    setStatusFilter(
-                                        value as EmployeeSalaryPaymentStatus | "ALL",
-                                    );
-                                    setPage(1);
-                                }}
                             >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">
-                                        All Status
-                                    </SelectItem>
-                                    <SelectItem value="PAID">Paid</SelectItem>
-                                    <SelectItem value="PENDING">
-                                        Pending
-                                    </SelectItem>
-                                    <SelectItem value="CANCELLED">
-                                        Cancelled
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <div className="flex justify-end">
-                        <Button onClick={handleExport} variant="outline">
-                            <LuDownload className="mr-2 h-4 w-4" />
-                            Export CSV
+                                <LuCalendar className="mr-2 h-4 w-4" />
+                                {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                                            {format(dateRange.to, "LLL dd, y")}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, "LLL dd, y")
+                                    )
+                                ) : (
+                                    <span>Pick a date range</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <div className="flex">
+                                <div className="border-r p-2">
+                                    <div className="flex flex-col gap-1">
+                                        {dateRangePresets.map((preset) => (
+                                            <Button
+                                                key={preset.label}
+                                                variant="ghost"
+                                                className="justify-start text-sm"
+                                                onClick={() =>
+                                                    setDateRange(preset.getValue())
+                                                }
+                                            >
+                                                {preset.label}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="p-2">
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={dateRange?.from}
+                                        selected={dateRange}
+                                        onSelect={setDateRange}
+                                        numberOfMonths={2}
+                                    />
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="flex items-center gap-2">
+                    {searchTerm || statusFilter !== "ALL" || dateRange?.from ? (
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setSearchTerm("");
+                                setStatusFilter("ALL");
+                                setDateRange({
+                                    from: startOfMonth(new Date()),
+                                    to: endOfMonth(new Date()),
+                                });
+                            }}
+                            className="h-8 px-2 lg:px-3"
+                        >
+                            Reset
+                            <LuX className="ml-2 h-4 w-4" />
                         </Button>
-                    </div>
+                    ) : null}
+                    <Button variant="outline" onClick={handleExport}>
+                        <LuDownload className="mr-2 h-4 w-4" />
+                        Export CSV
+                    </Button>
                 </div>
+            </div>
 
-                <div className="mb-4 flex items-center justify-between">
-                    <h3 className="flex items-center gap-2 text-lg font-semibold">
-                        <LuDollarSign className="h-5 w-5" />
-                        Salary Records
-                        {dateRange.from && dateRange.to && (
-                            <span className="text-sm font-normal text-muted-foreground">
-                                ({format(dateRange.from, "MMM dd")} -{" "}
-                                {format(dateRange.to, "MMM dd, yyyy")})
-                            </span>
-                        )}
-                    </h3>
-                    {employeesData?.meta && (
-                        <p className="text-sm text-muted-foreground">
-                            Showing: {filteredData?.length || 0} / {employeesData.meta.total} employees
-                        </p>
-                    )}
-                </div>
-
-                {isLoading ? (
-                    <div className="flex h-64 items-center justify-center">
-                        <Spinner className="h-8 w-8" />
-                    </div>
-                ) : (
-                    <DataTable
-                        columns={columns}
-                        data={filteredData || []}
-                        pagination={employeesData?.meta}
-                        onPageChange={setPage}
-                        onPageSizeChange={(newLimit) => {
-                            setLimit(newLimit);
-                            setPage(1);
-                        }}
-                    />
-                )}
+            {/* Data Table */}
+            <Card>
+                <DataTable
+                    columns={columns}
+                    data={filteredData || []}
+                    pagination={{
+                        page: page,
+                        limit: limit,
+                        total: salaryData?.meta?.total || 0,
+                        totalPages: salaryData?.meta?.totalPages || 1,
+                    }}
+                    onPageChange={setPage}
+                    onPageSizeChange={setLimit}
+                />
             </Card>
         </div>
     );

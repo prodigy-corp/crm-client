@@ -609,6 +609,12 @@ export interface EmployeeSalaryPayment {
   status: EmployeeSalaryPaymentStatus;
   createdAt: string;
   updatedAt: string;
+  employee?: {
+    id: string;
+    name: string;
+    employeeCode?: string;
+    designation?: string;
+  };
 }
 
 export interface EmployeeSalaryIncrement {
@@ -866,6 +872,13 @@ export const adminApi = {
   ): Promise<ApiResponse<EmployeeAttendance>> =>
     apiClient
       .put(`/admin/employees/${id}/attendance`, data)
+      .then((res) => res.data),
+
+  getAllSalaryPayments: (
+    params?: EmployeeSalaryPaymentQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<EmployeeSalaryPayment>>> =>
+    apiClient
+      .get('/admin/employees/salary/payments', { params })
       .then((res) => res.data),
 
   getEmployeeSalaryPayments: (

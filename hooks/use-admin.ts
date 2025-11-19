@@ -63,6 +63,8 @@ export const adminKeys = {
     [...adminKeys.employee(id), "attendance", params] as const,
   employeeSalaryPayments: (id: string, params?: EmployeeSalaryPaymentQueryParams) =>
     [...adminKeys.employee(id), "salary-payments", params] as const,
+  allSalaryPayments: (params?: EmployeeSalaryPaymentQueryParams) =>
+    [...adminKeys.employees(), "salary-payments", params] as const,
 
   blogs: () => [...adminKeys.all, "blogs"] as const,
   blogsList: (params?: any) => [...adminKeys.blogs(), "list", params] as const,
@@ -314,6 +316,18 @@ export const useEmployeeSalaryPayments = (
     queryFn: () => adminApi.getEmployeeSalaryPayments(id, params),
     select: (data) => data.data,
     enabled: !!id && enabled,
+  });
+};
+
+export const useAllSalaryPayments = (
+  params?: EmployeeSalaryPaymentQueryParams,
+  enabled: boolean = true,
+) => {
+  return useQuery({
+    queryKey: adminKeys.allSalaryPayments(params),
+    queryFn: () => adminApi.getAllSalaryPayments(params),
+    select: (data) => data.data,
+    enabled,
   });
 };
 
