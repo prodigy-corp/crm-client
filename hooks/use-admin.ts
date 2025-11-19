@@ -19,6 +19,12 @@ import {
   UpsertEmployeeAttendanceDto,
   CreateEmployeeSalaryIncrementDto,
   CreateEmployeeSalaryPaymentDto,
+  AdminClient,
+  AdminClientQueryParams,
+  AdminClientDetail,
+  ClientStatistics,
+  CreateAdminClientDto,
+  UpdateAdminClientDto,
   Role,
   UpdateBlogDto,
   UpdateRoleDto,
@@ -68,6 +74,11 @@ export const adminKeys = {
     [...adminKeys.employees(), "salary-payments", params] as const,
   allAttendance: (params?: AdminAttendanceQueryParams) =>
     [...adminKeys.employees(), "all-attendance", params] as const,
+
+  clients: () => [...adminKeys.all, "clients"] as const,
+  clientsList: (params?: AdminClientQueryParams) => [...adminKeys.clients(), "list", params] as const,
+  client: (id: string) => [...adminKeys.clients(), "detail", id] as const,
+  clientStatistics: () => [...adminKeys.clients(), "statistics"] as const,
 
   blogs: () => [...adminKeys.all, "blogs"] as const,
   blogsList: (params?: any) => [...adminKeys.blogs(), "list", params] as const,
@@ -399,6 +410,152 @@ export const useUpdateEmployeeSalaryPaymentStatus = () => {
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to update salary payment status");
+    },
+  });
+};
+
+// ==================== Clients Hooks ====================
+export const useClients = (
+  params?: AdminClientQueryParams,
+  enabled: boolean = true,
+) => {
+  return useQuery({
+    queryKey: adminKeys.clientsList(params),
+    queryFn: () => adminApi.getClients(params),
+    select: (data) => data.data,
+    enabled,
+  });
+};
+
+export const useClient = (id: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: adminKeys.client(id),
+    queryFn: () => adminApi.getClientById(id),
+    select: (data) => data.data,
+    enabled: !!id && enabled,
+  });
+};
+
+export const useClientStatistics = () => {
+  return useQuery({
+    queryKey: adminKeys.clientStatistics(),
+    queryFn: () => adminApi.getClientStatistics(),
+    select: (data) => data.data,
+  });
+};
+
+export const useCreateClient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAdminClientDto) => adminApi.createClient(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.clientStatistics() });
+      toast.success(data.message || "Client created successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create client");
+    },
+  });
+};
+
+export const useUpdateClient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateAdminClientDto }) =>
+      adminApi.updateClient(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.client(variables.id) });
+      toast.success(data.message || "Client updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update client");
+    },
+  });
+};
+
+export const useDeleteClient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminApi.deleteClient(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.clientStatistics() });
+      toast.success(data.message || "Client deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete client");
+    },
+  });
+};
+
+export const useSuspendClient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminApi.suspendClient(id),
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.client(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.clientStatistics() });
+      toast.success(data.message || "Client suspended successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to suspend client");
+    },
+  });
+};
+
+export const useActivateClient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminApi.activateClient(id),
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.client(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.clientStatistics() });
+      toast.success(data.message || "Client activated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to activate client");
+    },
+  });
+};
+
+export const useLinkClientUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, userId }: { id: string; userId: string }) =>
+      adminApi.linkClientUser(id, userId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.client(variables.id) });
+      toast.success(data.message || "User account linked successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to link user account");
+    },
+  });
+};
+
+export const useUnlinkClientUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminApi.unlinkClientUser(id),
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.client(id) });
+      toast.success(data.message || "User account unlinked successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to unlink user account");
     },
   });
 };

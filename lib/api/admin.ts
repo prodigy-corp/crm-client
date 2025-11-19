@@ -779,6 +779,126 @@ export interface CreateEmployeeSalaryPaymentDto {
   status?: EmployeeSalaryPaymentStatus;
 }
 
+// ==================== Client Management Types ====================
+export type ClientStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
+export type ClientType = "INDIVIDUAL" | "BUSINESS" | "ENTERPRISE";
+
+export interface AdminClient {
+  id: string;
+  userId?: string | null;
+  clientCode?: string;
+  name: string;
+  companyName?: string | null;
+  clientType: ClientType;
+
+  // Contact Information
+  mobileNumber?: string | null;
+  alternativeContactNumber?: string | null;
+  emailAddress?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zipCode?: string | null;
+  country?: string | null;
+
+  // Business Information
+  industry?: string | null;
+  website?: string | null;
+  taxId?: string | null;
+  registrationNumber?: string | null;
+
+  // Contract & Business
+  contractStartDate?: string | null;
+  contractEndDate?: string | null;
+  creditLimit: number;
+  outstandingBalance: number;
+  notes?: string | null;
+
+  // Status
+  status: ClientStatus;
+  photoUrl?: string | null;
+
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+
+  // User link (for client portal access)
+  user?: ClientUserSummary | null;
+}
+
+export interface ClientUserSummary {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface AdminClientDetail extends AdminClient {
+  user?: ClientUserSummary | null;
+}
+
+export interface AdminClientQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: ClientStatus;
+  clientType?: ClientType;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+// Client DTOs
+export interface CreateAdminClientDto {
+  clientCode?: string;
+  name: string;
+  companyName?: string;
+  clientType?: ClientType;
+
+  // Contact Information
+  mobileNumber?: string;
+  alternativeContactNumber?: string;
+  emailAddress?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+
+  // Business Information
+  industry?: string;
+  website?: string;
+  taxId?: string;
+  registrationNumber?: string;
+
+  // Contract & Business
+  contractStartDate?: string;
+  contractEndDate?: string;
+  creditLimit?: number;
+  outstandingBalance?: number;
+  notes?: string;
+
+  // Status
+  status?: ClientStatus;
+
+  // User Link (optional, for linking to existing user account)
+  userId?: string;
+}
+
+export interface UpdateAdminClientDto extends Partial<CreateAdminClientDto> {
+  userId?: string;
+}
+
+export interface ClientStatistics {
+  totalClients: number;
+  activeClients: number;
+  inactiveClients: number;
+  suspendedClients: number;
+  individualClients: number;
+  businessClients: number;
+  enterpriseClients: number;
+  totalOutstandingBalance: number;
+}
+
 // Admin API Services
 export const adminApi = {
   // Dashboard
@@ -934,6 +1054,37 @@ export const adminApi = {
     apiClient
       .patch(`/admin/employees/${employeeId}/salary/payments/${paymentId}/status`, { status })
       .then((res) => res.data),
+
+  // Clients Management
+  getClients: (params?: AdminClientQueryParams): Promise<ApiResponse<PaginatedResponse<AdminClient>>> =>
+    apiClient.get("/admin/clients", { params }).then((res) => res.data),
+
+  getClientById: (id: string): Promise<ApiResponse<AdminClientDetail>> =>
+    apiClient.get(`/admin/clients/${id}`).then((res) => res.data),
+
+  createClient: (data: CreateAdminClientDto): Promise<ApiResponse<AdminClient>> =>
+    apiClient.post("/admin/clients", data).then((res) => res.data),
+
+  updateClient: (id: string, data: UpdateAdminClientDto): Promise<ApiResponse<AdminClient>> =>
+    apiClient.patch(`/admin/clients/${id}`, data).then((res) => res.data),
+
+  deleteClient: (id: string): Promise<ApiResponse<void>> =>
+    apiClient.delete(`/admin/clients/${id}`).then((res) => res.data),
+
+  suspendClient: (id: string): Promise<ApiResponse<AdminClient>> =>
+    apiClient.post(`/admin/clients/${id}/suspend`).then((res) => res.data),
+
+  activateClient: (id: string): Promise<ApiResponse<AdminClient>> =>
+    apiClient.post(`/admin/clients/${id}/activate`).then((res) => res.data),
+
+  linkClientUser: (id: string, userId: string): Promise<ApiResponse<AdminClient>> =>
+    apiClient.post(`/admin/clients/${id}/link-user`, { userId }).then((res) => res.data),
+
+  unlinkClientUser: (id: string): Promise<ApiResponse<AdminClient>> =>
+    apiClient.post(`/admin/clients/${id}/unlink-user`).then((res) => res.data),
+
+  getClientStatistics: (): Promise<ApiResponse<ClientStatistics>> =>
+    apiClient.get("/admin/clients/statistics").then((res) => res.data),
 
   // Blogs Management
   getBlogs: (params?: any): Promise<ApiResponse<PaginatedResponse<BlogPost>>> =>
