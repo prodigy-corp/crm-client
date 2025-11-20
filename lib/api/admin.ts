@@ -568,6 +568,18 @@ export interface AdminEmployee {
   deletedAt?: string | null;
   // User link (for role-based employee management)
   user?: EmployeeUserSummary | null;
+  departmentId?: string | null;
+  shiftId?: string | null;
+  department?: {
+    id: string;
+    name: string;
+  } | null;
+  shift?: {
+    id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+  } | null;
 }
 
 export interface EmployeeUserSummary {
@@ -739,11 +751,15 @@ export interface CreateAdminEmployeeDto {
 
   // User Link (optional, for linking to existing user account)
   userId?: string;
+  departmentId?: string;
+  shiftId?: string;
 }
 
 export interface UpdateAdminEmployeeDto extends Partial<CreateAdminEmployeeDto> {
   resignDate?: string;
   userId?: string;
+  departmentId?: string;
+  shiftId?: string;
 }
 
 export interface ResignEmployeeDto {

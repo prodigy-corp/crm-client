@@ -6,6 +6,8 @@ import {
   EmployeeStatus,
 } from "@/lib/api/admin";
 import { useCreateEmployee } from "@/hooks/use-admin";
+import { useDepartments, useShifts } from "@/hooks/use-organization";
+import { Department, Shift } from "@/lib/api/organization";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,8 @@ export function CreateEmployeeDialog({
   onOpenChange,
 }: CreateEmployeeDialogProps) {
   const createEmployeeMutation = useCreateEmployee();
+  const { data: departments, isLoading: departmentsLoading } = useDepartments();
+  const { data: shifts, isLoading: shiftsLoading } = useShifts();
 
   const [formData, setFormData] = useState<CreateAdminEmployeeDto>({
     name: "",
@@ -172,6 +176,56 @@ export function CreateEmployeeDialog({
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="INACTIVE">Inactive</SelectItem>
                     <SelectItem value="RESIGNED">Resigned</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="departmentId">Department</Label>
+                <Select
+                  value={formData.departmentId || "__none__"}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      departmentId: value === "__none__" ? undefined : value,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="departmentId">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No Department</SelectItem>
+                    {departments?.map((dept: Department) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="shiftId">Shift</Label>
+                <Select
+                  value={formData.shiftId || "__none__"}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      shiftId: value === "__none__" ? undefined : value,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="shiftId">
+                    <SelectValue placeholder="Select Shift" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No Shift</SelectItem>
+                    {shifts?.map((shift: Shift) => (
+                      <SelectItem key={shift.id} value={shift.id}>
+                        {shift.name} ({shift.startTime} - {shift.endTime})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

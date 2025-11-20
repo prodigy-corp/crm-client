@@ -114,19 +114,21 @@ export const adminKeys = {
 };
 
 // Dashboard Hooks
-export const useDashboardStats = () => {
+export const useDashboardStats = (enabled: boolean = true) => {
   return useQuery({
     queryKey: adminKeys.dashboardStats(),
     queryFn: () => adminApi.getDashboardStats(),
     select: (data) => data.data,
+    enabled,
   });
 };
 
-export const useRecentActivities = () => {
+export const useRecentActivities = (enabled: boolean = true) => {
   return useQuery({
     queryKey: adminKeys.recentActivities(),
     queryFn: () => adminApi.getRecentActivities(),
     select: (data) => data.data,
+    enabled,
   });
 };
 

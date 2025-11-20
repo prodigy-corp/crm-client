@@ -6,37 +6,36 @@ import { useAuth } from "@/hooks/use-auth";
 
 const SidebarMenu = () => {
   const { user, isLoading } = useAuth();
-  const roles = user?.roles || [];
-  const isAdmin = roles.includes("ADMIN") || roles.includes("SUPER_ADMIN");
   const canViewCmsSettings = !!user?.permissions?.includes("admin.settings.view");
 
   const filteredMenus = menuList
     .map((menu) => {
-      if (menu.baseUrl === "/dashboard/admin") {
-        if (!isAdmin && !isLoading) {
-          return null;
-        }
+      // Filter submenus based on permissions
+      if (menu.submenu) {
+        const filteredSubmenu = menu.submenu.filter((submenu) => {
+          // Check CMS-specific permissions
+          const isCmsItem = submenu.url.startsWith("/admin/dashboard/cms");
+          if (isCmsItem && !canViewCmsSettings && !isLoading) {
+            return false;
+          }
 
-        if (menu.submenu) {
-          const filteredSubmenu = menu.submenu.filter((submenu) => {
-            const isCmsItem = submenu.url.startsWith("/dashboard/admin/cms");
-            if (isCmsItem && !canViewCmsSettings && !isLoading) {
-              return false;
-            }
+          // Check required permissions
+          if (
+            submenu.requiredPermission &&
+            !user?.permissions?.includes(submenu.requiredPermission) &&
+            !isLoading
+          ) {
+            return false;
+          }
 
-            if (
-              submenu.requiredPermission &&
-              !user?.permissions?.includes(submenu.requiredPermission) &&
-              !isLoading
-            ) {
-              return false;
-            }
+          return true;
+        });
 
-            return true;
-          });
-
+        // Only return the menu if it has visible submenu items
+        if (filteredSubmenu.length > 0) {
           return { ...menu, submenu: filteredSubmenu } as typeof menu;
         }
+        return null;
       }
 
       return menu;

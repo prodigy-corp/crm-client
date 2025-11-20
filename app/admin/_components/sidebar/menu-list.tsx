@@ -1,18 +1,27 @@
-import { LuLayoutGrid, LuSettings, LuUserRound, LuShield, LuFileText } from "react-icons/lu";
+import {
+  LuLayoutGrid,
+  LuSettings,
+  LuUserRound,
+  LuShield,
+  LuFileText,
+  LuUsers,
+  LuClock,
+  LuBriefcase,
+} from "react-icons/lu";
 
 export const menuList = [
   {
     id: 1,
     title: "Admin Overview",
     icon: <LuLayoutGrid className="icon" />,
-    url: "/admin",
-    baseUrl: "/admin",
+    url: "/admin/dashboard",
+    baseUrl: "/admin/dashboard",
   },
   {
     id: 2,
     title: "Management",
     icon: <LuUserRound className="icon" />,
-    baseUrl: "/admin/dashboard",
+    baseUrl: "/admin/management",
     submenu: [
       {
         id: 1,
@@ -27,6 +36,12 @@ export const menuList = [
       },
       {
         id: 3,
+        title: "Clients Management",
+        url: "/admin/dashboard/clients",
+        requiredPermission: "admin.clients.view",
+      },
+      {
+        id: 4,
         title: "Roles & Permissions",
         url: "/admin/dashboard/roles",
       },
@@ -34,9 +49,35 @@ export const menuList = [
   },
   {
     id: 3,
+    title: "Organization",
+    icon: <LuBriefcase className="icon" />,
+    baseUrl: "/admin/organization",
+    submenu: [
+      {
+        id: 1,
+        title: "Departments",
+        url: "/admin/dashboard/departments",
+        requiredPermission: "admin.departments.view",
+      },
+      {
+        id: 2,
+        title: "Shifts",
+        url: "/admin/dashboard/shifts",
+        requiredPermission: "admin.shifts.view",
+      },
+      {
+        id: 3,
+        title: "Attendance",
+        url: "/admin/dashboard/attendance",
+        requiredPermission: "admin.attendance.view",
+      },
+    ],
+  },
+  {
+    id: 4,
     title: "Content Studio",
     icon: <LuFileText className="icon" />,
-    baseUrl: "/admin/dashboard",
+    baseUrl: "/admin/content",
     submenu: [
       {
         id: 1,
@@ -61,10 +102,10 @@ export const menuList = [
     ],
   },
   {
-    id: 4,
+    id: 5,
     title: "System & Settings",
     icon: <LuShield className="icon" />,
-    baseUrl: "/admin/dashboard",
+    baseUrl: "/admin/settings",
     submenu: [
       {
         id: 1,

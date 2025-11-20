@@ -33,8 +33,8 @@ const MenuCollapsible = ({
   const matchesSubmenu = submenu.some((item) =>
     pathName === item.url || pathName.startsWith(`${item.url}/`)
   );
-  const matchesBase = pathName === baseUrl;
-  const active = matchesBase || matchesSubmenu;
+  // Only highlight the parent if a submenu item is active, not just baseUrl match
+  const active = matchesSubmenu;
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

@@ -3,8 +3,21 @@
  * Defines navigation items with role/permission-based visibility
  */
 
-import { LuLayoutDashboard, LuUser, LuClock, LuDollarSign, LuBriefcase, LuFileText, LuSettings } from "react-icons/lu";
+import {
+    LuLayoutDashboard,
+    LuUser,
+    LuClock,
+    LuDollarSign,
+    LuBriefcase,
+    LuFileText,
+    LuSettings,
+    LuUsers,
+    LuUserCheck,
+    LuUserPlus,
+    LuShield,
+} from "react-icons/lu";
 import type { IconType } from "react-icons";
+import { LucideBarChart } from "lucide-react";
 
 export interface NavItem {
     title: string;
@@ -39,7 +52,8 @@ export const dashboardNavigation: NavItem[] = [
         icon: LuUser,
         description: "Your personal information",
     },
-    // Employee-specific navigation
+
+    // ==================== EMPLOYEE NAVIGATION ====================
     {
         title: "Attendance",
         href: "/dashboard/attendance",
@@ -56,7 +70,8 @@ export const dashboardNavigation: NavItem[] = [
         requiredRoles: ['EMPLOYEE'],
         requiredPermissions: ['employee.salary.read'],
     },
-    // Client-specific navigation
+
+    // ==================== CLIENT NAVIGATION ====================
     {
         title: "Projects",
         href: "/dashboard/projects",
@@ -73,83 +88,78 @@ export const dashboardNavigation: NavItem[] = [
         requiredRoles: ['CLIENT'],
         requiredPermissions: ['client.invoices.read'],
     },
-    // Common settings (all users)
+
+    // ==================== ADMIN NAVIGATION ====================
+    {
+        title: "Users",
+        href: "/admin/users",
+        icon: LuUsers,
+        description: "Manage users",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.users.view'],
+    },
+    {
+        title: "Employees",
+        href: "/admin/employees",
+        icon: LuUserCheck,
+        description: "Manage employees",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.employees.view'],
+    },
+    {
+        title: "Clients",
+        href: "/admin/clients",
+        icon: LuUserPlus,
+        description: "Manage clients",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.clients.view'],
+    },
+    {
+        title: "Attendance",
+        href: "/admin/attendance",
+        icon: LuClock,
+        description: "View and manage all attendance",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.attendance.view'],
+    },
+    {
+        title: "Blogs",
+        href: "/admin/blogs",
+        icon: LuFileText,
+        description: "Manage blog posts",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.blog.view'],
+    },
+    {
+        title: "CMS",
+        href: "/admin/cms",
+        icon: LuSettings,
+        description: "Manage CMS and site settings",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.cms.settings.view'],
+    },
+    {
+        title: "Roles",
+        href: "/admin/roles",
+        icon: LuShield,
+        description: "Manage roles and permissions",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.roles.view'],
+    },
+    {
+        title: "Analytics",
+        href: "/admin/analytics",
+        icon: LucideBarChart,
+        description: "View analytics and reports",
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        requiredPermissions: ['admin.dashboard.analytics'],
+    },
+
+    // Settings
     {
         title: "Settings",
         href: "/dashboard/settings",
         icon: LuSettings,
         description: "Account settings",
-    },
-];
-
-/**
- * Grouped dashboard navigation (alternative layout)
- */
-export const dashboardNavigationGrouped: NavGroup[] = [
-    {
-        title: "General",
-        items: [
-            {
-                title: "Dashboard",
-                href: "/dashboard",
-                icon: LuLayoutDashboard,
-                description: "Overview and stats",
-            },
-            {
-                title: "Profile",
-                href: "/dashboard/profile",
-                icon: LuUser,
-                description: "Your personal information",
-            },
-        ],
-    },
-    {
-        title: "Employee",
-        items: [
-            {
-                title: "Attendance",
-                href: "/dashboard/attendance",
-                icon: LuClock,
-                description: "View your attendance records",
-                requiredRoles: ['EMPLOYEE'],
-            },
-            {
-                title: "Salary",
-                href: "/dashboard/salary",
-                icon: LuDollarSign,
-                description: "View salary and payments",
-                requiredRoles: ['EMPLOYEE'],
-            },
-        ],
-    },
-    {
-        title: "Client",
-        items: [
-            {
-                title: "Projects",
-                href: "/dashboard/projects",
-                icon: LuBriefcase,
-                description: "View your projects",
-                requiredRoles: ['CLIENT'],
-            },
-            {
-                title: "Invoices",
-                href: "/dashboard/invoices",
-                icon: LuFileText,
-                description: "View and manage invoices",
-                requiredRoles: ['CLIENT'],
-            },
-        ],
-    },
-    {
-        title: "Settings",
-        items: [
-            {
-                title: "Settings",
-                href: "/dashboard/settings",
-                icon: LuSettings,
-                description: "Account settings",
-            },
-        ],
     },
 ];
