@@ -18,14 +18,24 @@ export const useLogin = () => {
       // Cookies are automatically set by the backend
       // Invalidate profile query to refetch user data
       queryClient.invalidateQueries({ queryKey: ["auth", "profile"] });
-      
+
       toast.success(response.data.message || "Login successful!");
-      
+
       // Handle redirect from backend (for 2FA or email verification)
       if (response.data.redirect) {
         router.push(response.data.redirect as Route);
       } else {
-        router.push("/admin/dashboard");
+        // Get user data to determine redirect
+        const userData = response.data.user || (response.data as any);
+        const roles = userData.roles || [];
+
+        // Redirect based on role
+        // Admins go to admin dashboard, all others go to unified dashboard
+        if (roles.includes('SUPER_ADMIN') || roles.includes('ADMIN')) {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/dashboard" as Route);
+        }
       }
     },
     onError: (error: ApiError) => {
@@ -44,9 +54,9 @@ export const useRegister = () => {
       // Cookies are automatically set by the backend
       // Invalidate profile query to refetch user data
       queryClient.invalidateQueries({ queryKey: ["auth", "profile"] });
-      
+
       toast.success(response.data.message || "Registration successful!");
-      
+
       // Handle redirect from backend
       if (response.data.redirect) {
         router.push(response.data.redirect as Route);
@@ -70,7 +80,7 @@ export const useLogout = () => {
       // Cookies are automatically cleared by the backend
       // Clear query cache
       queryClient.clear();
-      
+
       toast.success("Logged out successfully");
       router.push("/auth/login");
     },
@@ -148,7 +158,7 @@ export const useResetPassword = () => {
 // Utility hook to check if user is authenticated
 export const useAuth = () => {
   const { data: user, isLoading, error } = useProfile();
-  
+
   return {
     user,
     isLoading,

@@ -17,6 +17,7 @@ export interface AuthResponse {
   status: boolean;
   message: string;
   redirect?: string;
+  user?: UserProfile;
 }
 
 export interface UserProfile {
