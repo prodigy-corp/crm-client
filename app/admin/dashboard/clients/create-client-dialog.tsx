@@ -94,7 +94,13 @@ export function CreateClientDialog({
     const handleSubmit = (event: FormEvent) => {
         event.preventDefault();
 
-        createClientMutation.mutate(formData, {
+        const submissionData = {
+            ...formData,
+            contractStartDate: formData.contractStartDate ? new Date(formData.contractStartDate).toISOString() : undefined,
+            contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate).toISOString() : undefined,
+        };
+
+        createClientMutation.mutate(submissionData, {
             onSuccess: () => {
                 onOpenChange(false);
                 resetForm();

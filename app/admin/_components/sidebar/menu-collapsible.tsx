@@ -1,5 +1,5 @@
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LuChevronDown } from "react-icons/lu";
 import {
   Collapsible,
@@ -35,7 +35,11 @@ const MenuCollapsible = ({
   );
   const matchesBase = pathName === baseUrl;
   const active = matchesBase || matchesSubmenu;
-  const [open, setOpen] = useState(active);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(active);
+  }, [active]);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>

@@ -230,17 +230,17 @@ const AdminClientsPage = () => {
                 const client = row.original;
                 return (
                     <div className="text-sm">
-                        {client.outstandingBalance > 0 && (
+                        {Number(client.outstandingBalance) > 0 && (
                             <div className="text-red-600 font-medium">
-                                Bal: ${client.outstandingBalance.toFixed(2)}
+                                Bal: ${Number(client.outstandingBalance).toFixed(2)}
                             </div>
                         )}
-                        {client.creditLimit > 0 && (
+                        {Number(client.creditLimit) > 0 && (
                             <div className="text-muted-foreground">
-                                Limit: ${client.creditLimit.toFixed(2)}
+                                Limit: ${Number(client.creditLimit).toFixed(2)}
                             </div>
                         )}
-                        {client.outstandingBalance === 0 && client.creditLimit === 0 && (
+                        {Number(client.outstandingBalance) === 0 && Number(client.creditLimit) === 0 && (
                             <span className="text-muted-foreground">—</span>
                         )}
                     </div>

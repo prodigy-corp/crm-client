@@ -110,8 +110,14 @@ export function EditClientDialog({
     const handleSubmit = (event: FormEvent) => {
         event.preventDefault();
 
+        const submissionData = {
+            ...formData,
+            contractStartDate: formData.contractStartDate ? new Date(formData.contractStartDate).toISOString() : undefined,
+            contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate).toISOString() : undefined,
+        };
+
         updateClientMutation.mutate(
-            { id: client.id, data: formData },
+            { id: client.id, data: submissionData },
             {
                 onSuccess: () => {
                     onOpenChange(false);
