@@ -6,6 +6,9 @@ import Sidebar from "./_components/sidebar";
 import { getSession } from "@/lib/getSession";
 import { redirect } from "next/navigation";
 
+// Force dynamic rendering to ensure getSession is called on every request
+export const dynamic = 'force-dynamic';
+
 const DashboardLayout = async ({ children }: LayoutProps<"/admin">) => {
   const user = await getSession();
   if (!user) {

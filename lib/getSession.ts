@@ -23,18 +23,35 @@ export interface SessionUser extends Omit<User, 'id'> {
  * @returns The user session data, or null if unauthenticated.
  */
 export const getSession = async (): Promise<SessionUser | null> => {
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    headers: {
-      Accept: "application/json",
-      Referer: API_BASE_URL,
-      cookie: (await cookies()).toString(),
-    },
-    cache: "no-store",
-  });
+  try {
+    const cookieStore = await cookies();
+    const cookieString = cookieStore.toString();
 
-  
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: {
+        Accept: "application/json",
+        Referer: API_BASE_URL,
+        cookie: cookieString,
+      },
+      credentials: "include",
+      cache: "no-store",
+    });
 
-  if (!response.ok) return null;
+    if (!response.ok) {
+      // Log in production to help debug session issues
+      if (process.env.NODE_ENV === 'production') {
+        console.log(`[getSession] Failed to fetch session: ${response.status} ${response.statusText}`);
+      }
+      return null;
+    }
 
-  return (await response.json()).data;
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    // Log errors in production
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[getSession] Error fetching session:', error);
+    }
+    return null;
+  }
 };
