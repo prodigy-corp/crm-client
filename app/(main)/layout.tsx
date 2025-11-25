@@ -2,9 +2,6 @@ import { getSession } from "@/lib/getSession";
 import Navbar from "./_components/navbar";
 import { redirect } from "next/navigation";
 
-// Force dynamic rendering to ensure getSession is called on every request
-export const dynamic = 'force-dynamic';
-
 const MainLayout = async ({ children }: LayoutProps<"/">) => {
   const user = await getSession()
 
