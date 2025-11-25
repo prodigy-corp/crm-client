@@ -33,23 +33,6 @@ const apiClient = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
-// Request interceptor to add auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    // Get token from localStorage or your auth store
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
