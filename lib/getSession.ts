@@ -1,5 +1,20 @@
 import { cookies } from "next/headers";
+import { User } from "./dataTypes";
 import { API_BASE_URL } from "./constants";
+
+
+
+export interface SessionUser extends Omit<User, 'id'> {
+  id: string;
+  avatar?: string;
+  status: string;
+  isEmailVerified: boolean;
+  isSellerVerified: boolean;
+  stripeOnboardingComplete: boolean;
+  isTwoFactorEnabled: boolean;
+  roles: string[];
+  permissions: string[];
+}
 
 /**
  * Server-only session fetcher.
@@ -7,7 +22,7 @@ import { API_BASE_URL } from "./constants";
  * on the client will throw an error
  * @returns The user session data, or null if unauthenticated.
  */
-export const getSession = async () => {
+export const getSession = async (): Promise<SessionUser | null> => {
   const response = await fetch(`${API_BASE_URL}/auth/me`, {
     headers: {
       Accept: "application/json",
