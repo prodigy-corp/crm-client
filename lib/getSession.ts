@@ -24,17 +24,11 @@ export interface SessionUser extends Omit<User, 'id'> {
  */
 export const getSession = async (): Promise<SessionUser | null> => {
   try {
-    const cookieStore = await cookies();
-    const cookieString = cookieStore.toString();
-
-    // If no cookies, return null early
-    if (!cookieString) return null;
-
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: {
         Accept: "application/json",
-        Referer: API_BASE_URL,
-        cookie: cookieString,
+         Referer: API_BASE_URL,
+      cookie: (await cookies()).toString(),
       },
       cache: "no-store",
       credentials: "include",
