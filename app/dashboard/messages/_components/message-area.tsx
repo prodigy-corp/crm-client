@@ -27,7 +27,8 @@ import {
   useMessageRoom,
   useSendMessage,
 } from "@/hooks/use-messages";
-import { Message } from "@/lib/api/messages";
+import { Message, MessageRoom } from "@/lib/api/messages";
+import { User } from "@/lib/dataTypes";
 import { cn } from "@/lib/utils";
 import { format, isSameDay, isToday, isYesterday } from "date-fns";
 import { MoreVertical } from "lucide-react";
@@ -67,7 +68,15 @@ export function MessageArea({
   );
   const { mutate: markAsRead } = useMarkAsRead();
 
-  const roomData = useMemo(() => data?.data?.data, [data]);
+  // API client transforms: { data: roomData, success, message }
+  // roomData contains { ...room, messages, otherUser }
+  const roomData = useMemo(
+    () =>
+      data?.data as
+        | (MessageRoom & { messages: Message[]; otherUser: User })
+        | undefined,
+    [data],
+  );
   const messages = useMemo(() => {
     if (!roomData?.messages) return [];
     return [...roomData.messages].reverse();

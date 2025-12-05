@@ -51,8 +51,10 @@ export function NewConversationDialog({
   const { mutate: initiateMessage, isPending } = useInitiateMessage();
 
   const users = useMemo(() => {
-    if (!data?.data?.data) return [];
-    return data.data.data;
+    // API returns { data: users[], success: true, message: '' }
+    // React Query wraps this in data, so we access data.data
+    if (!data?.data) return [];
+    return Array.isArray(data.data) ? data.data : [];
   }, [data]);
 
   const handleSelectUser = useCallback((user: User) => {

@@ -38,8 +38,9 @@ export function MessageSidebar({
   const { mutate: markAsRead } = useMarkAsRead();
 
   const rooms = useMemo(() => {
-    if (!data?.data?.data) return [];
-    return data.data.data;
+    // API returns { data: rooms[], success: true, message: '' }
+    if (!data?.data) return [];
+    return Array.isArray(data.data) ? data.data : [];
   }, [data]);
 
   const handleSelectRoom = useCallback(
