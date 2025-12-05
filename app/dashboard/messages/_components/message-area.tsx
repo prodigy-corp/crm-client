@@ -32,6 +32,7 @@ import { User } from "@/lib/dataTypes";
 import { cn } from "@/lib/utils";
 import { format, isSameDay, isToday, isYesterday } from "date-fns";
 import { MoreVertical } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   LuCheck,
@@ -126,7 +127,15 @@ export function MessageArea({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (!files || files.length === 0 || !roomId) return;
-      sendMessage({ payload: { type: "IMAGE" }, files: Array.from(files) });
+
+      // Determine file type based on first file
+      const file = files[0];
+      let fileType: "IMAGE" | "VIDEO" | "AUDIO" | "FILE" = "FILE";
+      if (file.type.startsWith("image/")) fileType = "IMAGE";
+      else if (file.type.startsWith("video/")) fileType = "VIDEO";
+      else if (file.type.startsWith("audio/")) fileType = "AUDIO";
+
+      sendMessage({ payload: { type: fileType }, files: Array.from(files) });
       e.target.value = "";
     },
     [roomId, sendMessage],
@@ -307,8 +316,8 @@ export function MessageArea({
                       )}
                     >
                       {msg.type === "IMAGE" && msg.attachment && (
-                        <img
-                          src={msg.attachment}
+                        <Image
+                          src={`${process.env.NEXT_PUBLIC_ASSET_URL}/${msg.attachment}`}
                           alt="Attachment"
                           className="max-h-60 max-w-full rounded-lg object-cover"
                         />
