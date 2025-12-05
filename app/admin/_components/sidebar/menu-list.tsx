@@ -1,12 +1,10 @@
 import {
-  LuLayoutGrid,
-  LuSettings,
-  LuUserRound,
-  LuShield,
-  LuFileText,
-  LuUsers,
-  LuClock,
   LuBriefcase,
+  LuFileText,
+  LuLayoutGrid,
+  LuMessageCircle,
+  LuShield,
+  LuUserRound,
 } from "react-icons/lu";
 
 export const menuList = [
@@ -103,6 +101,14 @@ export const menuList = [
   },
   {
     id: 5,
+    title: "Messages",
+    icon: <LuMessageCircle className="icon" />,
+    url: "/admin/dashboard/messages",
+    baseUrl: "/admin/dashboard/messages",
+    requiredPermission: "message.read",
+  },
+  {
+    id: 6,
     title: "System & Settings",
     icon: <LuShield className="icon" />,
     baseUrl: "/admin/settings",
