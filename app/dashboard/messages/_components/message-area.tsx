@@ -32,12 +32,10 @@ import { User } from "@/lib/dataTypes";
 import { cn } from "@/lib/utils";
 import { format, isSameDay, isToday, isYesterday } from "date-fns";
 import { MoreVertical } from "lucide-react";
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   LuCheck,
   LuCheckCheck,
-  LuImage,
   LuMessageCircle,
   LuSend,
   LuTrash2,
@@ -316,7 +314,7 @@ export function MessageArea({
                       )}
                     >
                       {msg.type === "IMAGE" && msg.attachment && (
-                        <Image
+                        <img
                           src={`${process.env.NEXT_PUBLIC_ASSET_URL}/${msg.attachment}`}
                           alt="Attachment"
                           className="max-h-60 max-w-full rounded-lg object-cover"
