@@ -7,15 +7,17 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "us-003.s3.synologyc2.net"
-      }
-    ]
+        hostname: "us-003.s3.synologyc2.net",
+      },
+    ],
   },
   async rewrites() {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
     return [
       {
         source: "/backend/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
+        destination: `${apiUrl}/:path*`,
       },
     ];
   },
