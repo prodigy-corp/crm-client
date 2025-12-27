@@ -48,6 +48,7 @@ import {
   uploadHeroImage,
   uploadTestimonialAvatar,
   uploadContentImage,
+  ChangePasswordDto,
 } from "@/lib/api/admin";
 
 // Query Keys
@@ -665,6 +666,23 @@ export const useVerifyUserEmail = () => {
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to verify user email");
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ChangePasswordDto }) =>
+      adminApi.changePassword(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.users() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.user(variables.id) });
+      toast.success(data.message || "Password changed successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to change password");
     },
   });
 };
