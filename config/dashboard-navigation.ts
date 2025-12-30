@@ -161,6 +161,20 @@ export const dashboardNavigation: NavItem[] = [
     requiredRoles: ["ADMIN", "SUPER_ADMIN"],
     requiredPermissions: ["admin.dashboard.analytics"],
   },
+  {
+    title: "Tasks",
+    href: "/dashboard/tasks",
+    icon: LuClock,
+    description: "Manage and track tasks",
+    requiredPermissions: ["tasks.read"],
+  },
+  {
+    title: "Productivity",
+    href: "/dashboard/productivity",
+    icon: LucideBarChart,
+    description: "Employee productivity overview",
+    requiredPermissions: ["admin.dashboard.view"],
+  },
 
   // Settings
   {
