@@ -16,6 +16,7 @@ export function useAnnouncements() {
   return useQuery({
     queryKey: announcementKeys.lists(),
     queryFn: announcementsApi.getAnnouncements,
+    select: (data) => data.data,
   });
 }
 
@@ -23,6 +24,7 @@ export function useActiveAnnouncements() {
   return useQuery({
     queryKey: announcementKeys.active(),
     queryFn: announcementsApi.getActiveAnnouncements,
+    select: (data) => data.data,
   });
 }
 
@@ -30,6 +32,7 @@ export function useAnnouncement(id: string) {
   return useQuery({
     queryKey: announcementKeys.detail(id),
     queryFn: () => announcementsApi.getAnnouncement(id),
+    select: (data) => data.data,
     enabled: !!id,
   });
 }
