@@ -57,6 +57,10 @@ export interface UpdateUserDto {
   status?: "ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING";
 }
 
+export interface ChangePasswordDto {
+  password: string;
+}
+
 export interface UserQueryParams {
   page?: number;
   limit?: number;
@@ -951,6 +955,9 @@ export const adminApi = {
 
   verifyUserEmail: (id: string): Promise<ApiResponse<AdminUser>> =>
     apiClient.put(`/admin/users/${id}/verify-email`).then((res) => res.data),
+
+  changePassword: (id: string, data: ChangePasswordDto): Promise<ApiResponse<any>> =>
+    apiClient.put(`/admin/users/${id}/change-password`, data).then((res) => res.data),
 
   getUserLoginHistory: (id: string): Promise<ApiResponse<any[]>> =>
     apiClient.get(`/admin/users/${id}/login-history`).then((res) => res.data),

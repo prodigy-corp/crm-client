@@ -21,37 +21,40 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown";
-import { 
-  LuEllipsis, 
-  LuUserPlus, 
-  LuSearch, 
+import {
+  LuEllipsis,
+  LuUserPlus,
+  LuSearch,
   LuFilter,
   LuEye,
   LuPencil,
   LuTrash2,
   LuShield,
   LuShieldOff,
-  LuMail
+  LuMail,
+  LuLock
 } from "react-icons/lu";
 import { AdminUser, UserQueryParams } from "@/lib/api/admin";
-import { 
-  useUsers, 
-  useBlockUser, 
-  useUnblockUser, 
+import {
+  useUsers,
+  useBlockUser,
+  useUnblockUser,
   useDeleteUser,
-  useVerifyUserEmail 
+  useVerifyUserEmail
 } from "@/hooks/use-admin";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "../../../../components/ui/badge";
 import { CreateUserDialog } from "./create-user-dialog";
 import { EditUserDialog } from "./edit-user-dialog";
 import { ViewUserDialog } from "./view-user-dialog";
+import { ChangePasswordDialog } from "./change-password-dialog";
 
 const AdminUsersPage = () => {
   // State
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [viewingUser, setViewingUser] = useState<AdminUser | null>(null);
+  const [changePasswordUser, setChangePasswordUser] = useState<AdminUser | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ACTIVE" | "INACTIVE" | "BLOCKED" | "PENDING" | "ALL">("ALL");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
@@ -150,7 +153,7 @@ const AdminUsersPage = () => {
       cell: ({ row }) => {
         const roles = row.original.roles || [];
         if (roles.length === 0) return <span className="text-muted-foreground">—</span>;
-        
+
         return (
           <div className="flex flex-wrap gap-1">
             {roles.map((userRole, index) => (
@@ -201,7 +204,7 @@ const AdminUsersPage = () => {
       header: "Last Login",
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
-          {row.original.lastLoginAt 
+          {row.original.lastLoginAt
             ? formatDistanceToNow(new Date(row.original.lastLoginAt), { addSuffix: true })
             : "Never"
           }
@@ -213,7 +216,7 @@ const AdminUsersPage = () => {
       header: "Actions",
       cell: ({ row }) => {
         const user = row.original;
-        
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -231,9 +234,13 @@ const AdminUsersPage = () => {
                 <LuPencil className="mr-2 h-4 w-4" />
                 Edit User
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setChangePasswordUser(user)}>
+                <LuLock className="mr-2 h-4 w-4" />
+                Change Password
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               {!(user.emailVerified || user.isEmailVerified) && (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => verifyEmailMutation.mutate(user.id)}
                   disabled={verifyEmailMutation.isPending}
                 >
@@ -242,7 +249,7 @@ const AdminUsersPage = () => {
                 </DropdownMenuItem>
               )}
               {user.status === "BLOCKED" ? (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => unblockUserMutation.mutate(user.id)}
                   disabled={unblockUserMutation.isPending}
                 >
@@ -250,7 +257,7 @@ const AdminUsersPage = () => {
                   Unblock User
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => blockUserMutation.mutate(user.id)}
                   disabled={blockUserMutation.isPending}
                 >
@@ -259,7 +266,7 @@ const AdminUsersPage = () => {
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => deleteUserMutation.mutate(user.id)}
                 disabled={deleteUserMutation.isPending}
                 className="text-destructive focus:text-destructive"
@@ -341,8 +348,8 @@ const AdminUsersPage = () => {
             <Spinner className="w-8 h-8" />
           </div>
         ) : (
-          <DataTable 
-            columns={columns} 
+          <DataTable
+            columns={columns}
             data={usersData?.data || []}
             pagination={usersData?.meta}
             onPageChange={setPage}
@@ -355,21 +362,27 @@ const AdminUsersPage = () => {
       </div>
 
       {/* Dialogs */}
-      <CreateUserDialog 
-        open={openCreateDialog} 
-        onOpenChange={setOpenCreateDialog} 
+      <CreateUserDialog
+        open={openCreateDialog}
+        onOpenChange={setOpenCreateDialog}
       />
-      
-      <EditUserDialog 
+
+      <EditUserDialog
         user={editingUser}
-        open={!!editingUser} 
-        onOpenChange={(open) => !open && setEditingUser(null)} 
+        open={!!editingUser}
+        onOpenChange={(open) => !open && setEditingUser(null)}
       />
-      
-      <ViewUserDialog 
+
+      <ViewUserDialog
         user={viewingUser}
-        open={!!viewingUser} 
-        onOpenChange={(open) => !open && setViewingUser(null)} 
+        open={!!viewingUser}
+        onOpenChange={(open) => !open && setViewingUser(null)}
+      />
+
+      <ChangePasswordDialog
+        user={changePasswordUser}
+        open={!!changePasswordUser}
+        onOpenChange={(open) => !open && setChangePasswordUser(null)}
       />
     </div>
   );
