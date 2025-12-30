@@ -171,6 +171,14 @@ export const dashboardNavigation: NavItem[] = [
     requiredPermissions: ["admin.blog.view"],
   },
   {
+    title: "Assets",
+    href: "/admin/dashboard/assets",
+    icon: LuBriefcase,
+    description: "Company asset inventory",
+    requiredRoles: ["ADMIN", "SUPER_ADMIN"],
+    requiredPermissions: ["asset.read"],
+  },
+  {
     title: "CMS",
     href: "/admin/dashboard/cms/site-settings",
     icon: LuSettings,

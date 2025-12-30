@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { LuUser, LuMail, LuPhone, LuMapPin, LuCalendar, LuBriefcase, LuUpload, LuSave } from "react-icons/lu";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useEmployeeAssets } from "@/hooks/use-assets";
+import { LuLaptop, LuSmartphone, LuCreditCard, LuBox } from "react-icons/lu";
 
 export default function ProfilePage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -367,8 +369,124 @@ export default function ProfilePage() {
                             </div>
                         </div>
                     </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-4 md:grid-cols-3">
+                        {/* Employee Code */}
+                        <div className="space-y-2">
+                            <Label className="text-gray-600 dark:text-gray-400">Employee Code</Label>
+                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+                                <LuBriefcase className="h-4 w-4 text-gray-500" />
+                                <span className="font-semibold">{employee?.employeeCode || "N/A"}</span>
+                            </div>
+                        </div>
+
+                        {/* Designation */}
+                        <div className="space-y-2">
+                            <Label className="text-gray-600 dark:text-gray-400">Designation</Label>
+                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+                                <LuBriefcase className="h-4 w-4 text-gray-500" />
+                                <span className="font-semibold">{employee?.designation || "N/A"}</span>
+                            </div>
+                        </div>
+
+                        {/* National ID */}
+                        <div className="space-y-2">
+                            <Label className="text-gray-600 dark:text-gray-400">National ID</Label>
+                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+                                <LuUser className="h-4 w-4 text-gray-500" />
+                                <span className="font-semibold">{employee?.nationalId || "N/A"}</span>
+                            </div>
+                        </div>
+
+                        {/* Join Date */}
+                        <div className="space-y-2">
+                            <Label className="text-gray-600 dark:text-gray-400">Join Date</Label>
+                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+                                <LuCalendar className="h-4 w-4 text-gray-500" />
+                                <span className="font-semibold">
+                                    {employee?.joiningDate
+                                        ? format(new Date(employee.joiningDate), "MMM d, yyyy")
+                                        : "N/A"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Base Salary */}
+                        <div className="space-y-2">
+                            <Label className="text-gray-600 dark:text-gray-400">Base Salary</Label>
+                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+                                <span className="text-lg font-bold text-primary">
+                                    ৳{employee?.baseSalary || "0"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="space-y-2">
+                            <Label className="text-gray-600 dark:text-gray-400">Status</Label>
+                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+                                <span
+                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${employee?.status === "active"
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                        : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                        }`}
+                                >
+                                    {employee?.status || "N/A"}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
+
+            <AssignedAssetsCard employeeId={employee?.id} />
         </div>
+    );
+}
+
+function AssignedAssetsCard({ employeeId }: { employeeId?: string }) {
+    const { data: assets, isLoading } = useEmployeeAssets(employeeId || "");
+
+    const getIcon = (type: string) => {
+        const t = type.toLowerCase();
+        if (t.includes("laptop")) return <LuLaptop className="h-5 w-5" />;
+        if (t.includes("phone")) return <LuSmartphone className="h-5 w-5" />;
+        if (t.includes("card") || t.includes("id")) return <LuCreditCard className="h-5 w-5" />;
+        return <LuBox className="h-5 w-5" />;
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>My Assets</CardTitle>
+                <CardDescription>Company assets currently assigned to you</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? (
+                    <div className="py-4 text-center text-sm text-muted-foreground">Loading assets...</div>
+                ) : assets && assets.length > 0 ? (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {assets.map((item) => (
+                            <div key={item.id} className="flex items-start gap-4 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md">
+                                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                                    {getIcon(item.asset?.type || "")}
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                    <div className="font-semibold">{item.asset?.name}</div>
+                                    <div className="text-xs text-muted-foreground">{item.asset?.type} • {item.asset?.serialNumber}</div>
+                                    <div className="pt-1 text-[10px] text-muted-foreground italic">Assigned: {format(new Date(item.assignedAt), "MMM d, yyyy")}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="py-8 text-center border-2 border-dashed rounded-lg bg-muted/30">
+                        <LuBox className="mx-auto h-12 w-12 text-muted-foreground opacity-20" />
+                        <p className="mt-2 text-sm text-muted-foreground font-medium">No assets assigned yet.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }
