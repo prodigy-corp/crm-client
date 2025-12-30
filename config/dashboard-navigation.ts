@@ -11,6 +11,7 @@ import {
   LuDollarSign,
   LuFileText,
   LuLayoutDashboard,
+  LuMegaphone,
   LuMessageCircle,
   LuSettings,
   LuShield,
@@ -177,6 +178,14 @@ export const dashboardNavigation: NavItem[] = [
     description: "Company asset inventory",
     requiredRoles: ["ADMIN", "SUPER_ADMIN"],
     requiredPermissions: ["asset.read"],
+  },
+  {
+    title: "Announcements",
+    href: "/admin/dashboard/announcements",
+    icon: LuMegaphone,
+    description: "Broadcast messages to users",
+    requiredRoles: ["ADMIN", "SUPER_ADMIN"],
+    requiredPermissions: ["announcement.read"],
   },
   {
     title: "CMS",

@@ -1,5 +1,6 @@
 "use client";
 
+import { AnnouncementBanner } from "@/components/shared/announcement-banner";
 import { Button } from "@/components/ui/button";
 import { dashboardNavigation } from "@/config/dashboard-navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -235,7 +236,10 @@ export default function DashboardLayout({
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
+          <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+            <AnnouncementBanner />
+            {children}
+          </div>
         </main>
       </div>
     </div>
