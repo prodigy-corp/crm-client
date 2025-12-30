@@ -46,8 +46,8 @@ export interface TaskQueryParams {
 
 export const tasksApi = {
   getTasks: (params?: TaskQueryParams) =>
-    apiClient.get<Task[]>("/tasks", { params }),
-  getTask: (id: string) => apiClient.get<Task>(`/tasks/${id}`),
+    apiClient.get<{ data: Task[] }>("/tasks", { params }),
+  getTask: (id: string) => apiClient.get<{ data: Task }>(`/tasks/${id}`),
   createTask: (data: CreateTaskDto) =>
     apiClient.post<{ message: string; data: Task }>("/tasks", data),
   updateTask: (id: string, data: UpdateTaskDto) =>

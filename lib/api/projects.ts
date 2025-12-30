@@ -38,8 +38,9 @@ export interface CreateProjectDto {
 export interface UpdateProjectDto extends Partial<CreateProjectDto> {}
 
 export const projectsApi = {
-  getProjects: () => apiClient.get<Project[]>("/projects"),
-  getProject: (id: string) => apiClient.get<Project>(`/projects/${id}`),
+  getProjects: () => apiClient.get<{ data: Project[] }>("/projects"),
+  getProject: (id: string) =>
+    apiClient.get<{ data: Project }>(`/projects/${id}`),
   createProject: (data: CreateProjectDto) =>
     apiClient.post<{ message: string; data: Project }>("/projects", data),
   updateProject: (id: string, data: UpdateProjectDto) =>

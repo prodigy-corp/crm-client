@@ -19,7 +19,7 @@ export const useTasks = (params?: TaskQueryParams) => {
   return useQuery({
     queryKey: taskKeys.lists(params),
     queryFn: () => tasksApi.getTasks(params),
-    select: (data) => data.data,
+    select: (data) => data.data.data,
   });
 };
 
@@ -27,7 +27,7 @@ export const useTask = (id: string) => {
   return useQuery({
     queryKey: taskKeys.detail(id),
     queryFn: () => tasksApi.getTask(id),
-    select: (data) => data.data,
+    select: (data) => data.data.data,
     enabled: !!id,
   });
 };

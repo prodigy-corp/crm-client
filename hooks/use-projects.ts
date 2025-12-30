@@ -17,7 +17,7 @@ export const useProjects = () => {
   return useQuery({
     queryKey: projectKeys.lists(),
     queryFn: () => projectsApi.getProjects(),
-    select: (data) => data.data,
+    select: (data) => data.data.data,
   });
 };
 
@@ -25,7 +25,7 @@ export const useProject = (id: string) => {
   return useQuery({
     queryKey: projectKeys.detail(id),
     queryFn: () => projectsApi.getProject(id),
-    select: (data) => data.data,
+    select: (data) => data.data.data,
     enabled: !!id,
   });
 };
