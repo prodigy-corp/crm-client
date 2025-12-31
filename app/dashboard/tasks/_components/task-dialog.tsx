@@ -106,10 +106,26 @@ export function TaskDialog({
 
   const onSubmit = async (values: TaskFormValues) => {
     try {
+      // Clean up values for backend
+      const formattedValues = Object.entries(values).reduce(
+        (acc, [key, value]) => {
+          if (value === "") {
+            acc[key as keyof TaskFormValues] = undefined;
+          } else if (key === "dueDate" && typeof value === "string") {
+            // Prisma requires full ISO string
+            acc[key as keyof TaskFormValues] = new Date(value).toISOString();
+          } else {
+            acc[key as keyof TaskFormValues] = value as any;
+          }
+          return acc;
+        },
+        {} as any,
+      );
+
       if (task) {
-        await updateTask.mutateAsync({ id: task.id, data: values });
+        await updateTask.mutateAsync({ id: task.id, data: formattedValues });
       } else {
-        await createTask.mutateAsync(values);
+        await createTask.mutateAsync(formattedValues);
       }
       onOpenChange(false);
     } catch (error) {

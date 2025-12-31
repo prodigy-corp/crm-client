@@ -89,14 +89,14 @@ export default function ProductivityPage() {
           <>
             {renderStatCard(
               "Task Completion",
-              `${myStats.completionRate.toFixed(1)}%`,
+              `${myStats.completionRate ? Number(myStats.completionRate.toFixed(1)) : 0}%`,
               <CheckCircle className="h-4 w-4" />,
               "Efficiency vs Deadlines",
               "green-500",
             )}
             {renderStatCard(
               "Efficiency Rate",
-              `${myStats.efficiencyRate.toFixed(1)}%`,
+              `${myStats.efficiencyRate ? Number(myStats.efficiencyRate.toFixed(1)) : 0}%`,
               <TrendingUp className="h-4 w-4" />,
               "Weighted Performance",
               "blue-500",
@@ -218,7 +218,7 @@ export default function ProductivityPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-bold text-primary">
-                        {employee.efficiencyRate.toFixed(1)}%
+                        {employee.efficiencyRate ? Number(employee.efficiencyRate.toFixed(1)) : 0}%
                       </div>
                       <div className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                         Efficiency
@@ -265,7 +265,7 @@ export default function ProductivityPage() {
                       <td className="px-6 py-4">{employee.totalTasks}</td>
                       <td className="px-6 py-4">{employee.completedTasks}</td>
                       <td className="px-6 py-4 font-bold text-primary">
-                        {employee.efficiencyRate.toFixed(1)}%
+                        {employee.efficiencyRate ? Number(employee.efficiencyRate.toFixed(1)) : 0}%
                       </td>
                       <td className="px-6 py-4 font-medium text-green-500">
                         {employee.onTimeCompletion} tasks

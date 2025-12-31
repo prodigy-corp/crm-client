@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAssets, useDeleteAsset } from "@/hooks/use-assets";
+import { useDeleteAsset } from "@/hooks/use-assets";
 import { Asset, AssetStatus } from "@/lib/api/assets";
 import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
@@ -26,8 +26,13 @@ import { AssignModal } from "./assign-modal";
 import { DamageModal } from "./damage-modal";
 import { ReturnModal } from "./return-modal";
 
-export function AssetList() {
-  const { data: assets, isLoading } = useAssets();
+interface AssetListProps {
+  assets: Asset[] | undefined;
+  isLoading: boolean;
+}
+
+export function AssetList({ assets, isLoading }: AssetListProps) {
+  // const { data: assets, isLoading } = useAssets(); // Removed internal fetch
   const deleteAsset = useDeleteAsset();
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);

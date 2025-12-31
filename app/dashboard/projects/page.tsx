@@ -44,10 +44,10 @@ export default function ProjectsPage() {
             <Calendar className="mr-1 h-3 w-3" /> Planned
           </Badge>
         );
-      case "ACTIVE":
+      case "IN_PROGRESS":
         return (
           <Badge className="bg-blue-500 font-medium hover:bg-blue-600">
-            <Clock className="mr-1 h-3 w-3" /> Active
+            <Clock className="mr-1 h-3 w-3" /> In Progress
           </Badge>
         );
       case "COMPLETED":

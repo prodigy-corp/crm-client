@@ -61,48 +61,48 @@ export interface AssetHistory {
 
 export const assetApi = {
   getAssets: () =>
-    api.get<Asset[]>("/assets").then((res: AxiosResponse<Asset[]>) => res.data),
+    api.get<{ data: Asset[] }>("/assets").then((res: AxiosResponse<{ data: Asset[] }>) => res.data),
 
   getAsset: (id: string) =>
     api
-      .get<Asset>(`/assets/${id}`)
-      .then((res: AxiosResponse<Asset>) => res.data),
+      .get<{ data: Asset }>(`/assets/${id}`)
+      .then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   createAsset: (data: Partial<Asset>) =>
     api
-      .post<Asset>("/assets", data)
-      .then((res: AxiosResponse<Asset>) => res.data),
+      .post<{ data: Asset }>("/assets", data)
+      .then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   updateAsset: (id: string, data: Partial<Asset>) =>
     api
-      .patch<Asset>(`/assets/${id}`, data)
-      .then((res: AxiosResponse<Asset>) => res.data),
+      .patch<{ data: Asset }>(`/assets/${id}`, data)
+      .then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   deleteAsset: (id: string) =>
-    api.delete(`/assets/${id}`).then((res: AxiosResponse<any>) => res.data),
+    api.delete<{ data: Asset }>(`/assets/${id}`).then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   assignAsset: (id: string, data: { employeeId: string; condition?: string }) =>
     api
-      .post(`/assets/${id}/assign`, data)
-      .then((res: AxiosResponse<any>) => res.data),
+      .post<{ data: Asset }>(`/assets/${id}/assign`, data)
+      .then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   returnAsset: (id: string, data: { returnNote?: string }) =>
     api
-      .post(`/assets/${id}/return`, data)
-      .then((res: AxiosResponse<any>) => res.data),
+      .post<{ data: Asset }>(`/assets/${id}/return`, data)
+      .then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   reportDamage: (id: string, description: string) =>
     api
-      .post(`/assets/${id}/report-damage`, { description })
-      .then((res: AxiosResponse<any>) => res.data),
+      .post<{ data: Asset }>(`/assets/${id}/report-damage`, { description })
+      .then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   reportLoss: (id: string, description: string) =>
     api
-      .post(`/assets/${id}/report-loss`, { description })
-      .then((res: AxiosResponse<any>) => res.data),
+      .post<{ data: Asset }>(`/assets/${id}/report-loss`, { description })
+      .then((res: AxiosResponse<{ data: Asset }>) => res.data),
 
   getEmployeeAssets: (employeeId: string) =>
     api
-      .get<AssetAssignment[]>(`/assets/employee/${employeeId}`)
-      .then((res: AxiosResponse<AssetAssignment[]>) => res.data),
+      .get<{ data: AssetAssignment[] }>(`/assets/employee/${employeeId}`)
+      .then((res: AxiosResponse<{ data: AssetAssignment[] }>) => res.data),
 };

@@ -6,6 +6,7 @@ export const useAssets = () => {
   return useQuery({
     queryKey: ["assets"],
     queryFn: assetApi.getAssets,
+    select: (data) => data.data,
   });
 };
 
@@ -14,6 +15,7 @@ export const useAsset = (id: string) => {
     queryKey: ["assets", id],
     queryFn: () => assetApi.getAsset(id),
     enabled: !!id,
+    select: (data) => data.data,
   });
 };
 

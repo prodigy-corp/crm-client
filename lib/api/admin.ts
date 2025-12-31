@@ -26,14 +26,14 @@ export interface AdminUser {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
-  accounts?: Accounts[]
+  accounts?: Accounts[];
 }
 
 export interface Accounts {
-  id: string,
-  provider: string,
-  type: string,
-  createdAt: string,
+  id: string;
+  provider: string;
+  type: string;
+  createdAt: string;
 }
 
 export interface CreateUserDto {
@@ -216,7 +216,7 @@ export interface CreateBlogDto {
   isIndexable?: boolean;
 }
 
-export interface UpdateBlogDto extends Partial<CreateBlogDto> { }
+export interface UpdateBlogDto extends Partial<CreateBlogDto> {}
 
 export interface BlogQueryParams {
   page?: number;
@@ -759,7 +759,8 @@ export interface CreateAdminEmployeeDto {
   shiftId?: string;
 }
 
-export interface UpdateAdminEmployeeDto extends Partial<CreateAdminEmployeeDto> {
+export interface UpdateAdminEmployeeDto
+  extends Partial<CreateAdminEmployeeDto> {
   resignDate?: string;
   userId?: string;
   departmentId?: string;
@@ -932,7 +933,9 @@ export const adminApi = {
     apiClient.get("/admin/dashboard/analytics").then((res) => res.data),
 
   // Users Management
-  getUsers: (params?: UserQueryParams): Promise<ApiResponse<PaginatedResponse<AdminUser>>> =>
+  getUsers: (
+    params?: UserQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<AdminUser>>> =>
     apiClient.get("/admin/users", { params }).then((res) => res.data),
 
   getUserById: (id: string): Promise<ApiResponse<AdminUser>> =>
@@ -941,7 +944,10 @@ export const adminApi = {
   createUser: (data: CreateUserDto): Promise<ApiResponse<AdminUser>> =>
     apiClient.post("/admin/users", data).then((res) => res.data),
 
-  updateUser: (id: string, data: UpdateUserDto): Promise<ApiResponse<AdminUser>> =>
+  updateUser: (
+    id: string,
+    data: UpdateUserDto,
+  ): Promise<ApiResponse<AdminUser>> =>
     apiClient.put(`/admin/users/${id}`, data).then((res) => res.data),
 
   deleteUser: (id: string): Promise<ApiResponse<void>> =>
@@ -956,30 +962,47 @@ export const adminApi = {
   verifyUserEmail: (id: string): Promise<ApiResponse<AdminUser>> =>
     apiClient.put(`/admin/users/${id}/verify-email`).then((res) => res.data),
 
-  changePassword: (id: string, data: ChangePasswordDto): Promise<ApiResponse<any>> =>
-    apiClient.put(`/admin/users/${id}/change-password`, data).then((res) => res.data),
+  changePassword: (
+    id: string,
+    data: ChangePasswordDto,
+  ): Promise<ApiResponse<any>> =>
+    apiClient
+      .put(`/admin/users/${id}/change-password`, data)
+      .then((res) => res.data),
 
   getUserLoginHistory: (id: string): Promise<ApiResponse<any[]>> =>
     apiClient.get(`/admin/users/${id}/login-history`).then((res) => res.data),
 
   // Employees Management
-  getEmployees: (params?: AdminEmployeeQueryParams): Promise<ApiResponse<PaginatedResponse<AdminEmployee>>> =>
+  getEmployees: (
+    params?: AdminEmployeeQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<AdminEmployee>>> =>
     apiClient.get("/admin/employees", { params }).then((res) => res.data),
 
   getEmployeeById: (id: string): Promise<ApiResponse<AdminEmployeeDetail>> =>
     apiClient.get(`/admin/employees/${id}`).then((res) => res.data),
 
-  createEmployee: (data: CreateAdminEmployeeDto): Promise<ApiResponse<AdminEmployee>> =>
+  createEmployee: (
+    data: CreateAdminEmployeeDto,
+  ): Promise<ApiResponse<AdminEmployee>> =>
     apiClient.post("/admin/employees", data).then((res) => res.data),
 
-  updateEmployee: (id: string, data: UpdateAdminEmployeeDto): Promise<ApiResponse<AdminEmployee>> =>
+  updateEmployee: (
+    id: string,
+    data: UpdateAdminEmployeeDto,
+  ): Promise<ApiResponse<AdminEmployee>> =>
     apiClient.put(`/admin/employees/${id}`, data).then((res) => res.data),
 
   deleteEmployee: (id: string): Promise<ApiResponse<void>> =>
     apiClient.delete(`/admin/employees/${id}`).then((res) => res.data),
 
-  resignEmployee: (id: string, data: ResignEmployeeDto): Promise<ApiResponse<AdminEmployee>> =>
-    apiClient.put(`/admin/employees/${id}/resign`, data).then((res) => res.data),
+  resignEmployee: (
+    id: string,
+    data: ResignEmployeeDto,
+  ): Promise<ApiResponse<AdminEmployee>> =>
+    apiClient
+      .put(`/admin/employees/${id}/resign`, data)
+      .then((res) => res.data),
 
   uploadEmployeePhoto: (
     id: string,
@@ -1036,13 +1059,13 @@ export const adminApi = {
   getAllAttendance: (
     params?: AdminAttendanceQueryParams,
   ): Promise<ApiResponse<PaginatedResponse<EmployeeAttendance>>> =>
-    apiClient.get("/admin/attendance", { params }).then((res) => res.data),
+    apiClient.get("/admin/attendance", { params }).then((res) => res.data.data),
 
   getAllSalaryPayments: (
     params?: EmployeeSalaryPaymentQueryParams,
   ): Promise<ApiResponse<PaginatedResponse<EmployeeSalaryPayment>>> =>
     apiClient
-      .get('/admin/employees/salary/payments', { params })
+      .get("/admin/employees/salary/payments", { params })
       .then((res) => res.data),
 
   getEmployeeSalaryPayments: (
@@ -1075,20 +1098,30 @@ export const adminApi = {
     status: EmployeeSalaryPaymentStatus,
   ): Promise<ApiResponse<EmployeeSalaryPayment>> =>
     apiClient
-      .patch(`/admin/employees/${employeeId}/salary/payments/${paymentId}/status`, { status })
+      .patch(
+        `/admin/employees/${employeeId}/salary/payments/${paymentId}/status`,
+        { status },
+      )
       .then((res) => res.data),
 
   // Clients Management
-  getClients: (params?: AdminClientQueryParams): Promise<ApiResponse<PaginatedResponse<AdminClient>>> =>
+  getClients: (
+    params?: AdminClientQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<AdminClient>>> =>
     apiClient.get("/admin/clients", { params }).then((res) => res.data),
 
   getClientById: (id: string): Promise<ApiResponse<AdminClientDetail>> =>
     apiClient.get(`/admin/clients/${id}`).then((res) => res.data),
 
-  createClient: (data: CreateAdminClientDto): Promise<ApiResponse<AdminClient>> =>
+  createClient: (
+    data: CreateAdminClientDto,
+  ): Promise<ApiResponse<AdminClient>> =>
     apiClient.post("/admin/clients", data).then((res) => res.data),
 
-  updateClient: (id: string, data: UpdateAdminClientDto): Promise<ApiResponse<AdminClient>> =>
+  updateClient: (
+    id: string,
+    data: UpdateAdminClientDto,
+  ): Promise<ApiResponse<AdminClient>> =>
     apiClient.patch(`/admin/clients/${id}`, data).then((res) => res.data),
 
   deleteClient: (id: string): Promise<ApiResponse<void>> =>
@@ -1100,8 +1133,13 @@ export const adminApi = {
   activateClient: (id: string): Promise<ApiResponse<AdminClient>> =>
     apiClient.post(`/admin/clients/${id}/activate`).then((res) => res.data),
 
-  linkClientUser: (id: string, userId: string): Promise<ApiResponse<AdminClient>> =>
-    apiClient.post(`/admin/clients/${id}/link-user`, { userId }).then((res) => res.data),
+  linkClientUser: (
+    id: string,
+    userId: string,
+  ): Promise<ApiResponse<AdminClient>> =>
+    apiClient
+      .post(`/admin/clients/${id}/link-user`, { userId })
+      .then((res) => res.data),
 
   unlinkClientUser: (id: string): Promise<ApiResponse<AdminClient>> =>
     apiClient.post(`/admin/clients/${id}/unlink-user`).then((res) => res.data),
@@ -1119,11 +1157,19 @@ export const adminApi = {
   createBlog: (data: CreateBlogDto): Promise<ApiResponse<BlogPost>> =>
     apiClient.post("/blog", data).then((res) => res.data),
 
-  updateBlog: (id: string, data: UpdateBlogDto): Promise<ApiResponse<BlogPost>> =>
+  updateBlog: (
+    id: string,
+    data: UpdateBlogDto,
+  ): Promise<ApiResponse<BlogPost>> =>
     apiClient.put(`/blog/${id}`, data).then((res) => res.data),
 
-  updateBlogStatus: (id: string, status: string): Promise<ApiResponse<BlogPost>> =>
-    apiClient.put(`/admin/blogs/${id}/status`, { status }).then((res) => res.data),
+  updateBlogStatus: (
+    id: string,
+    status: string,
+  ): Promise<ApiResponse<BlogPost>> =>
+    apiClient
+      .put(`/admin/blogs/${id}/status`, { status })
+      .then((res) => res.data),
 
   deleteBlog: (id: string): Promise<ApiResponse<void>> =>
     apiClient.delete(`/admin/blogs/${id}`).then((res) => res.data),
@@ -1170,37 +1216,56 @@ export const adminApi = {
   getSiteSettings: (): Promise<ApiResponse<SiteSettings>> =>
     apiClient.get("/admin/cms/site-settings").then((res) => res.data),
 
-  updateSiteSettings: (data: UpdateSiteSettingsDto): Promise<ApiResponse<SiteSettings>> =>
+  updateSiteSettings: (
+    data: UpdateSiteSettingsDto,
+  ): Promise<ApiResponse<SiteSettings>> =>
     apiClient.put("/admin/cms/site-settings", data).then((res) => res.data),
 
   // CMS - SEO Settings
   getSEOSettings: (): Promise<ApiResponse<SEOSettings>> =>
     apiClient.get("/admin/cms/seo-settings").then((res) => res.data),
 
-  updateSEOSettings: (data: UpdateSEOSettingsDto): Promise<ApiResponse<SEOSettings>> =>
+  updateSEOSettings: (
+    data: UpdateSEOSettingsDto,
+  ): Promise<ApiResponse<SEOSettings>> =>
     apiClient.put("/admin/cms/seo-settings", data).then((res) => res.data),
 
   // CMS - Hero Sections
-  getHeroSections: (params?: ContentQueryParams): Promise<ApiResponse<PaginatedResponse<HeroSection>>> =>
-    apiClient.get("/admin/cms/hero-sections", { params }).then((res) => res.data),
+  getHeroSections: (
+    params?: ContentQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<HeroSection>>> =>
+    apiClient
+      .get("/admin/cms/hero-sections", { params })
+      .then((res) => res.data),
 
   getHeroSectionById: (id: string): Promise<ApiResponse<HeroSection>> =>
     apiClient.get(`/admin/cms/hero-sections/${id}`).then((res) => res.data),
 
-  createHeroSection: (data: CreateHeroSectionDto): Promise<ApiResponse<HeroSection>> =>
+  createHeroSection: (
+    data: CreateHeroSectionDto,
+  ): Promise<ApiResponse<HeroSection>> =>
     apiClient.post("/admin/cms/hero-sections", data).then((res) => res.data),
 
-  updateHeroSection: (id: string, data: UpdateHeroSectionDto): Promise<ApiResponse<HeroSection>> =>
-    apiClient.put(`/admin/cms/hero-sections/${id}`, data).then((res) => res.data),
+  updateHeroSection: (
+    id: string,
+    data: UpdateHeroSectionDto,
+  ): Promise<ApiResponse<HeroSection>> =>
+    apiClient
+      .put(`/admin/cms/hero-sections/${id}`, data)
+      .then((res) => res.data),
 
   deleteHeroSection: (id: string): Promise<ApiResponse<void>> =>
     apiClient.delete(`/admin/cms/hero-sections/${id}`).then((res) => res.data),
 
   reorderHeroSections: (ids: string[]): Promise<ApiResponse<void>> =>
-    apiClient.put("/admin/cms/hero-sections/reorder", { ids }).then((res) => res.data),
+    apiClient
+      .put("/admin/cms/hero-sections/reorder", { ids })
+      .then((res) => res.data),
 
   // CMS - Banners
-  getBanners: (params?: ContentQueryParams): Promise<ApiResponse<PaginatedResponse<Banner>>> =>
+  getBanners: (
+    params?: ContentQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<Banner>>> =>
     apiClient.get("/admin/cms/banners", { params }).then((res) => res.data),
 
   getBannerById: (id: string): Promise<ApiResponse<Banner>> =>
@@ -1209,33 +1274,51 @@ export const adminApi = {
   createBanner: (data: CreateBannerDto): Promise<ApiResponse<Banner>> =>
     apiClient.post("/admin/cms/banners", data).then((res) => res.data),
 
-  updateBanner: (id: string, data: UpdateBannerDto): Promise<ApiResponse<Banner>> =>
+  updateBanner: (
+    id: string,
+    data: UpdateBannerDto,
+  ): Promise<ApiResponse<Banner>> =>
     apiClient.put(`/admin/cms/banners/${id}`, data).then((res) => res.data),
 
   deleteBanner: (id: string): Promise<ApiResponse<void>> =>
     apiClient.delete(`/admin/cms/banners/${id}`).then((res) => res.data),
 
   reorderBanners: (ids: string[]): Promise<ApiResponse<void>> =>
-    apiClient.put("/admin/cms/banners/reorder", { ids }).then((res) => res.data),
+    apiClient
+      .put("/admin/cms/banners/reorder", { ids })
+      .then((res) => res.data),
 
   // CMS - Testimonials
-  getTestimonials: (params?: ContentQueryParams): Promise<ApiResponse<PaginatedResponse<Testimonial>>> =>
-    apiClient.get("/admin/cms/testimonials", { params }).then((res) => res.data),
+  getTestimonials: (
+    params?: ContentQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<Testimonial>>> =>
+    apiClient
+      .get("/admin/cms/testimonials", { params })
+      .then((res) => res.data),
 
   getTestimonialById: (id: string): Promise<ApiResponse<Testimonial>> =>
     apiClient.get(`/admin/cms/testimonials/${id}`).then((res) => res.data),
 
-  createTestimonial: (data: CreateTestimonialDto): Promise<ApiResponse<Testimonial>> =>
+  createTestimonial: (
+    data: CreateTestimonialDto,
+  ): Promise<ApiResponse<Testimonial>> =>
     apiClient.post("/admin/cms/testimonials", data).then((res) => res.data),
 
-  updateTestimonial: (id: string, data: UpdateTestimonialDto): Promise<ApiResponse<Testimonial>> =>
-    apiClient.put(`/admin/cms/testimonials/${id}`, data).then((res) => res.data),
+  updateTestimonial: (
+    id: string,
+    data: UpdateTestimonialDto,
+  ): Promise<ApiResponse<Testimonial>> =>
+    apiClient
+      .put(`/admin/cms/testimonials/${id}`, data)
+      .then((res) => res.data),
 
   deleteTestimonial: (id: string): Promise<ApiResponse<void>> =>
     apiClient.delete(`/admin/cms/testimonials/${id}`).then((res) => res.data),
 
   reorderTestimonials: (ids: string[]): Promise<ApiResponse<void>> =>
-    apiClient.put("/admin/cms/testimonials/reorder", { ids }).then((res) => res.data),
+    apiClient
+      .put("/admin/cms/testimonials/reorder", { ids })
+      .then((res) => res.data),
 
   // Public Content APIs (for frontend)
   getActiveHeroSections: (): Promise<ApiResponse<HeroSection[]>> =>
@@ -1244,108 +1327,113 @@ export const adminApi = {
   getActiveBanners: (): Promise<ApiResponse<Banner[]>> =>
     apiClient.get("/cms/banners/active").then((res) => res.data),
 
-  getActiveTestimonials: (params?: { limit?: number; featured?: boolean }): Promise<ApiResponse<Testimonial[]>> =>
-    apiClient.get("/cms/testimonials/active", { params }).then((res) => res.data),
+  getActiveTestimonials: (params?: {
+    limit?: number;
+    featured?: boolean;
+  }): Promise<ApiResponse<Testimonial[]>> =>
+    apiClient
+      .get("/cms/testimonials/active", { params })
+      .then((res) => res.data),
 };
 
 // Upload logo
-export const uploadLogo = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
+export const uploadLogo = async (
+  file: File,
+): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
-    "/admin/cms/upload/logo",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await apiClient.post<
+    ApiResponse<{ url: string; key: string }>
+  >("/admin/cms/upload/logo", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
 // Upload favicon
-export const uploadFavicon = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
+export const uploadFavicon = async (
+  file: File,
+): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
-    "/admin/cms/upload/favicon",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await apiClient.post<
+    ApiResponse<{ url: string; key: string }>
+  >("/admin/cms/upload/favicon", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
 // Upload SEO image (OG/Twitter)
-export const uploadSeoImage = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
+export const uploadSeoImage = async (
+  file: File,
+): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
-    "/admin/cms/upload/seo-image",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await apiClient.post<
+    ApiResponse<{ url: string; key: string }>
+  >("/admin/cms/upload/seo-image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
 // Upload hero background image
-export const uploadHeroImage = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
+export const uploadHeroImage = async (
+  file: File,
+): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
-    "/admin/cms/upload/hero-image",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await apiClient.post<
+    ApiResponse<{ url: string; key: string }>
+  >("/admin/cms/upload/hero-image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
 // Upload testimonial avatar
-export const uploadTestimonialAvatar = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
+export const uploadTestimonialAvatar = async (
+  file: File,
+): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
-    "/admin/cms/upload/testimonial-avatar",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await apiClient.post<
+    ApiResponse<{ url: string; key: string }>
+  >("/admin/cms/upload/testimonial-avatar", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
 // Upload general content image
-export const uploadContentImage = async (file: File): Promise<ApiResponse<{ url: string; key: string }>> => {
+export const uploadContentImage = async (
+  file: File,
+): Promise<ApiResponse<{ url: string; key: string }>> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<ApiResponse<{ url: string; key: string }>>(
-    "/admin/cms/upload/content-image",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await apiClient.post<
+    ApiResponse<{ url: string; key: string }>
+  >("/admin/cms/upload/content-image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };

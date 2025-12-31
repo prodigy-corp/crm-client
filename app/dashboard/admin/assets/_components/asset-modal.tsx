@@ -60,15 +60,31 @@ export function AssetModal({ open, onOpenChange, asset }: AssetModalProps) {
   }, [asset, reset, open]);
 
   const onSubmit = (data: any) => {
+    const payload = {
+      ...data,
+      value:
+        data.value !== "" && data.value !== undefined && data.value !== null
+          ? Number(data.value)
+          : undefined,
+      purchaseDate: data.purchaseDate
+        ? new Date(data.purchaseDate).toISOString()
+        : undefined,
+    };
+
+    // Remove undefined keys
+    Object.keys(payload).forEach(
+      (key) => payload[key] === undefined && delete payload[key],
+    );
+
     if (asset) {
       updateAsset.mutate(
-        { id: asset.id, data },
+        { id: asset.id, data: payload },
         {
           onSuccess: () => onOpenChange(false),
         },
       );
     } else {
-      createAsset.mutate(data, {
+      createAsset.mutate(payload, {
         onSuccess: () => onOpenChange(false),
       });
     }

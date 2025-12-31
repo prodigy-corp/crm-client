@@ -471,9 +471,9 @@ function AssignedAssetsCard({ employeeId }: { employeeId?: string }) {
           <div className="py-4 text-center text-sm text-muted-foreground">
             Loading assets...
           </div>
-        ) : assets && assets.length > 0 ? (
+        ) : assets && assets.data.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {assets.map((item) => (
+            {assets.data.map((item) => (
               <div
                 key={item.id}
                 className="flex items-start gap-4 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md"

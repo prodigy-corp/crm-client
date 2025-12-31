@@ -14,7 +14,7 @@ export const useMyProductivity = (params?: ProductivityFilter) => {
   return useQuery({
     queryKey: productivityKeys.my(params),
     queryFn: () => productivityApi.getMyProductivity(params),
-    select: (data) => data.data,
+    select: (data) => data.data.data,
   });
 };
 
@@ -22,7 +22,7 @@ export const useProductivityOverview = () => {
   return useQuery({
     queryKey: productivityKeys.overview(),
     queryFn: () => productivityApi.getOverview(),
-    select: (data) => data.data,
+    select: (data) => data.data.data,
   });
 };
 
@@ -33,7 +33,7 @@ export const useEmployeeProductivity = (
   return useQuery({
     queryKey: productivityKeys.employee(id, params),
     queryFn: () => productivityApi.getEmployeeProductivity(id, params),
-    select: (data) => data.data,
+    select: (data) => data.data.data,
     enabled: !!id,
   });
 };

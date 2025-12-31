@@ -8,7 +8,7 @@ import {
 import type { NavItem } from "@/config/dashboard-navigation";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { isValidElement, useEffect, useState } from "react";
 import { LuChevronDown } from "react-icons/lu";
 
 type MenuCollapsibleProps = NavItem & {
@@ -57,7 +57,13 @@ const MenuCollapsible = ({
                 active ? "bg-primary/20" : "bg-zinc-100 dark:bg-zinc-800",
               )}
             >
-              {typeof Icon === "function" ? <Icon className="h-4 w-4" /> : Icon}
+              {Icon &&
+                (isValidElement(Icon) ? (
+                  Icon
+                ) : (
+                  // @ts-ignore
+                  <Icon className="h-4 w-4" />
+                ))}
             </div>
             <span className="truncate">{title}</span>
           </div>

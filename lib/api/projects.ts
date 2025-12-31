@@ -4,7 +4,7 @@ export interface Project {
   id: string;
   name: string;
   description?: string;
-  status: "PLANNED" | "ACTIVE" | "COMPLETED" | "ON_HOLD" | "CANCELLED";
+  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "ON_HOLD" | "CANCELLED";
   startDate?: string;
   endDate?: string;
   clientId?: string;
@@ -27,12 +27,12 @@ export interface Project {
 
 export interface CreateProjectDto {
   name: string;
-  description?: string;
+  description?: string | null;
   status?: Project["status"];
-  startDate?: string;
-  endDate?: string;
-  clientId?: string;
-  managerId?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  clientId?: string | null;
+  managerId?: string | null;
 }
 
 export interface UpdateProjectDto extends Partial<CreateProjectDto> {}

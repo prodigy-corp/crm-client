@@ -1,83 +1,80 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   adminApi,
-  AdminUser,
-  BlogPost,
-  CreateBlogDto,
-  CreateRoleDto,
-  CreateUserDto,
-  AdminEmployee,
-  AdminEmployeeQueryParams,
   AdminAttendanceQueryParams,
-  EmployeeAttendanceQueryParams,
-  EmployeeSalaryPaymentQueryParams,
+  AdminClientQueryParams,
+  AdminEmployeeQueryParams,
+  ChangePasswordDto,
+  ContentQueryParams,
+  CreateAdminClientDto,
   CreateAdminEmployeeDto,
-  UpdateAdminEmployeeDto,
-  ResignEmployeeDto,
-  EmployeeAttendanceActionDto,
-  UpsertEmployeeAttendanceDto,
+  CreateBannerDto,
+  CreateBlogDto,
   CreateEmployeeSalaryIncrementDto,
   CreateEmployeeSalaryPaymentDto,
-  AdminClient,
-  AdminClientQueryParams,
-  AdminClientDetail,
-  ClientStatistics,
-  CreateAdminClientDto,
-  UpdateAdminClientDto,
-  Role,
-  UpdateBlogDto,
-  UpdateRoleDto,
-  UpdateUserDto,
-  UserQueryParams,
-  UpdateSiteSettingsDto,
-  UpdateSEOSettingsDto,
-  uploadLogo,
-  uploadFavicon,
-  uploadSeoImage,
-  HeroSection,
   CreateHeroSectionDto,
-  UpdateHeroSectionDto,
-  Banner,
-  CreateBannerDto,
-  UpdateBannerDto,
-  Testimonial,
+  CreateRoleDto,
   CreateTestimonialDto,
+  CreateUserDto,
+  EmployeeAttendanceActionDto,
+  EmployeeAttendanceQueryParams,
+  EmployeeSalaryPaymentQueryParams,
+  ResignEmployeeDto,
+  UpdateAdminClientDto,
+  UpdateAdminEmployeeDto,
+  UpdateBannerDto,
+  UpdateBlogDto,
+  UpdateHeroSectionDto,
+  UpdateRoleDto,
+  UpdateSEOSettingsDto,
+  UpdateSiteSettingsDto,
   UpdateTestimonialDto,
-  ContentQueryParams,
-  uploadHeroImage,
-  uploadTestimonialAvatar,
+  UpdateUserDto,
   uploadContentImage,
-  ChangePasswordDto,
+  uploadFavicon,
+  uploadHeroImage,
+  uploadLogo,
+  uploadSeoImage,
+  uploadTestimonialAvatar,
+  UpsertEmployeeAttendanceDto,
+  UserQueryParams,
 } from "@/lib/api/admin";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // Query Keys
 export const adminKeys = {
   all: ["admin"] as const,
   dashboard: () => [...adminKeys.all, "dashboard"] as const,
   dashboardStats: () => [...adminKeys.dashboard(), "stats"] as const,
-  recentActivities: () => [...adminKeys.dashboard(), "recent-activities"] as const,
+  recentActivities: () =>
+    [...adminKeys.dashboard(), "recent-activities"] as const,
   analytics: () => [...adminKeys.dashboard(), "analytics"] as const,
 
   users: () => [...adminKeys.all, "users"] as const,
-  usersList: (params?: UserQueryParams) => [...adminKeys.users(), "list", params] as const,
+  usersList: (params?: UserQueryParams) =>
+    [...adminKeys.users(), "list", params] as const,
   user: (id: string) => [...adminKeys.users(), "detail", id] as const,
-  userLoginHistory: (id: string) => [...adminKeys.users(), "login-history", id] as const,
+  userLoginHistory: (id: string) =>
+    [...adminKeys.users(), "login-history", id] as const,
 
   employees: () => [...adminKeys.all, "employees"] as const,
-  employeesList: (params?: AdminEmployeeQueryParams) => [...adminKeys.employees(), "list", params] as const,
+  employeesList: (params?: AdminEmployeeQueryParams) =>
+    [...adminKeys.employees(), "list", params] as const,
   employee: (id: string) => [...adminKeys.employees(), "detail", id] as const,
   employeeAttendance: (id: string, params?: EmployeeAttendanceQueryParams) =>
     [...adminKeys.employee(id), "attendance", params] as const,
-  employeeSalaryPayments: (id: string, params?: EmployeeSalaryPaymentQueryParams) =>
-    [...adminKeys.employee(id), "salary-payments", params] as const,
+  employeeSalaryPayments: (
+    id: string,
+    params?: EmployeeSalaryPaymentQueryParams,
+  ) => [...adminKeys.employee(id), "salary-payments", params] as const,
   allSalaryPayments: (params?: EmployeeSalaryPaymentQueryParams) =>
     [...adminKeys.employees(), "salary-payments", params] as const,
   allAttendance: (params?: AdminAttendanceQueryParams) =>
     [...adminKeys.employees(), "all-attendance", params] as const,
 
   clients: () => [...adminKeys.all, "clients"] as const,
-  clientsList: (params?: AdminClientQueryParams) => [...adminKeys.clients(), "list", params] as const,
+  clientsList: (params?: AdminClientQueryParams) =>
+    [...adminKeys.clients(), "list", params] as const,
   client: (id: string) => [...adminKeys.clients(), "detail", id] as const,
   clientStatistics: () => [...adminKeys.clients(), "statistics"] as const,
 
@@ -102,16 +99,21 @@ export const adminKeys = {
   seoSettings: () => [...adminKeys.cms(), "seo-settings"] as const,
 
   heroSections: () => [...adminKeys.cms(), "hero-sections"] as const,
-  heroSectionsList: (params?: ContentQueryParams) => [...adminKeys.heroSections(), "list", params] as const,
-  heroSection: (id: string) => [...adminKeys.heroSections(), "detail", id] as const,
+  heroSectionsList: (params?: ContentQueryParams) =>
+    [...adminKeys.heroSections(), "list", params] as const,
+  heroSection: (id: string) =>
+    [...adminKeys.heroSections(), "detail", id] as const,
 
   banners: () => [...adminKeys.cms(), "banners"] as const,
-  bannersList: (params?: ContentQueryParams) => [...adminKeys.banners(), "list", params] as const,
+  bannersList: (params?: ContentQueryParams) =>
+    [...adminKeys.banners(), "list", params] as const,
   banner: (id: string) => [...adminKeys.banners(), "detail", id] as const,
 
   testimonials: () => [...adminKeys.cms(), "testimonials"] as const,
-  testimonialsList: (params?: ContentQueryParams) => [...adminKeys.testimonials(), "list", params] as const,
-  testimonial: (id: string) => [...adminKeys.testimonials(), "detail", id] as const,
+  testimonialsList: (params?: ContentQueryParams) =>
+    [...adminKeys.testimonials(), "list", params] as const,
+  testimonial: (id: string) =>
+    [...adminKeys.testimonials(), "detail", id] as const,
 };
 
 // Dashboard Hooks
@@ -204,7 +206,9 @@ export const useUpdateEmployee = () => {
       adminApi.updateEmployee(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Employee updated successfully");
     },
     onError: (error: any) => {
@@ -236,7 +240,9 @@ export const useResignEmployee = () => {
       adminApi.resignEmployee(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Employee marked as resigned");
     },
     onError: (error: any) => {
@@ -253,7 +259,9 @@ export const useUploadEmployeePhoto = () => {
       adminApi.uploadEmployeePhoto(id, file),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.employees() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Employee photo updated successfully");
     },
     onError: (error: any) => {
@@ -279,10 +287,17 @@ export const useEmployeeCheckIn = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data?: EmployeeAttendanceActionDto }) =>
-      adminApi.employeeCheckIn(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data?: EmployeeAttendanceActionDto;
+    }) => adminApi.employeeCheckIn(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Employee checked in successfully");
     },
     onError: (error: any) => {
@@ -295,10 +310,17 @@ export const useEmployeeCheckOut = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data?: EmployeeAttendanceActionDto }) =>
-      adminApi.employeeCheckOut(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data?: EmployeeAttendanceActionDto;
+    }) => adminApi.employeeCheckOut(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Employee checked out successfully");
     },
     onError: (error: any) => {
@@ -311,10 +333,17 @@ export const useUpsertEmployeeAttendance = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpsertEmployeeAttendanceDto }) =>
-      adminApi.upsertEmployeeAttendance(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpsertEmployeeAttendanceDto;
+    }) => adminApi.upsertEmployeeAttendance(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Attendance updated successfully");
     },
     onError: (error: any) => {
@@ -364,10 +393,17 @@ export const useCreateEmployeeSalaryIncrement = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: CreateEmployeeSalaryIncrementDto }) =>
-      adminApi.createEmployeeSalaryIncrement(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: CreateEmployeeSalaryIncrementDto;
+    }) => adminApi.createEmployeeSalaryIncrement(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Salary increment created successfully");
     },
     onError: (error: any) => {
@@ -380,11 +416,20 @@ export const useCreateEmployeeSalaryPayment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: CreateEmployeeSalaryPaymentDto }) =>
-      adminApi.createEmployeeSalaryPayment(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: CreateEmployeeSalaryPaymentDto;
+    }) => adminApi.createEmployeeSalaryPayment(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.employeeSalaryPayments(variables.id) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employeeSalaryPayments(variables.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.id),
+      });
       toast.success(data.message || "Salary payment created successfully");
     },
     onError: (error: any) => {
@@ -400,16 +445,23 @@ export const useUpdateEmployeeSalaryPaymentStatus = () => {
     mutationFn: ({
       employeeId,
       paymentId,
-      status
+      status,
     }: {
       employeeId: string;
       paymentId: string;
       status: "PENDING" | "PAID" | "CANCELLED";
-    }) => adminApi.updateEmployeeSalaryPaymentStatus(employeeId, paymentId, status),
+    }) =>
+      adminApi.updateEmployeeSalaryPaymentStatus(employeeId, paymentId, status),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.employeeSalaryPayments(variables.employeeId) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.employee(variables.employeeId) });
-      toast.success(data.message || "Salary payment status updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employeeSalaryPayments(variables.employeeId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.employee(variables.employeeId),
+      });
+      toast.success(
+        data.message || "Salary payment status updated successfully",
+      );
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to update salary payment status");
@@ -471,7 +523,9 @@ export const useUpdateClient = () => {
       adminApi.updateClient(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.client(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.client(variables.id),
+      });
       toast.success(data.message || "Client updated successfully");
     },
     onError: (error: any) => {
@@ -538,7 +592,9 @@ export const useLinkClientUser = () => {
       adminApi.linkClientUser(id, userId),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.clients() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.client(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.client(variables.id),
+      });
       toast.success(data.message || "User account linked successfully");
     },
     onError: (error: any) => {
@@ -562,7 +618,6 @@ export const useUnlinkClientUser = () => {
     },
   });
 };
-
 
 export const useUserLoginHistory = (id: string) => {
   return useQuery({
@@ -916,7 +971,8 @@ export const useUpdateSiteSettings = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateSiteSettingsDto) => adminApi.updateSiteSettings(data),
+    mutationFn: (data: UpdateSiteSettingsDto) =>
+      adminApi.updateSiteSettings(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.siteSettings() });
       toast.success(data.message || "Site settings updated successfully");
@@ -940,7 +996,8 @@ export const useUpdateSEOSettings = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateSEOSettingsDto) => adminApi.updateSEOSettings(data),
+    mutationFn: (data: UpdateSEOSettingsDto) =>
+      adminApi.updateSEOSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seo-settings"] });
       toast.success("SEO settings updated successfully");
@@ -1025,7 +1082,10 @@ export const useUploadContentImage = () => {
 };
 
 // CMS - Hero Sections Hooks
-export const useHeroSections = (params?: ContentQueryParams, enabled: boolean = true) => {
+export const useHeroSections = (
+  params?: ContentQueryParams,
+  enabled: boolean = true,
+) => {
   return useQuery({
     queryKey: adminKeys.heroSectionsList(params),
     queryFn: () => adminApi.getHeroSections(params),
@@ -1047,7 +1107,8 @@ export const useCreateHeroSection = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateHeroSectionDto) => adminApi.createHeroSection(data),
+    mutationFn: (data: CreateHeroSectionDto) =>
+      adminApi.createHeroSection(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.heroSections() });
       toast.success(data.message || "Hero section created successfully");
@@ -1066,7 +1127,9 @@ export const useUpdateHeroSection = () => {
       adminApi.updateHeroSection(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.heroSections() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.heroSection(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.heroSection(variables.id),
+      });
       toast.success(data.message || "Hero section updated successfully");
     },
     onError: (error: any) => {
@@ -1106,7 +1169,10 @@ export const useReorderHeroSections = () => {
 };
 
 // CMS - Banners Hooks
-export const useBanners = (params?: ContentQueryParams, enabled: boolean = true) => {
+export const useBanners = (
+  params?: ContentQueryParams,
+  enabled: boolean = true,
+) => {
   return useQuery({
     queryKey: adminKeys.bannersList(params),
     queryFn: () => adminApi.getBanners(params),
@@ -1147,7 +1213,9 @@ export const useUpdateBanner = () => {
       adminApi.updateBanner(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.banners() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.banner(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.banner(variables.id),
+      });
       toast.success(data.message || "Banner updated successfully");
     },
     onError: (error: any) => {
@@ -1187,7 +1255,10 @@ export const useReorderBanners = () => {
 };
 
 // CMS - Testimonials Hooks
-export const useTestimonials = (params?: ContentQueryParams, enabled: boolean = true) => {
+export const useTestimonials = (
+  params?: ContentQueryParams,
+  enabled: boolean = true,
+) => {
   return useQuery({
     queryKey: adminKeys.testimonialsList(params),
     queryFn: () => adminApi.getTestimonials(params),
@@ -1209,7 +1280,8 @@ export const useCreateTestimonial = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateTestimonialDto) => adminApi.createTestimonial(data),
+    mutationFn: (data: CreateTestimonialDto) =>
+      adminApi.createTestimonial(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.testimonials() });
       toast.success(data.message || "Testimonial created successfully");
@@ -1228,7 +1300,9 @@ export const useUpdateTestimonial = () => {
       adminApi.updateTestimonial(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.testimonials() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.testimonial(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.testimonial(variables.id),
+      });
       toast.success(data.message || "Testimonial updated successfully");
     },
     onError: (error: any) => {
@@ -1284,7 +1358,10 @@ export const useActiveBanners = () => {
   });
 };
 
-export const useActiveTestimonials = (params?: { limit?: number; featured?: boolean }) => {
+export const useActiveTestimonials = (params?: {
+  limit?: number;
+  featured?: boolean;
+}) => {
   return useQuery({
     queryKey: ["public", "testimonials", "active", params],
     queryFn: () => adminApi.getActiveTestimonials(params),

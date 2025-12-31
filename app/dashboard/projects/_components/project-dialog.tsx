@@ -37,7 +37,13 @@ import * as z from "zod";
 const projectSchema = z.z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
-  status: z.enum(["PLANNED", "ACTIVE", "COMPLETED", "ON_HOLD", "CANCELLED"]),
+  status: z.enum([
+    "PLANNED",
+    "IN_PROGRESS",
+    "COMPLETED",
+    "ON_HOLD",
+    "CANCELLED",
+  ]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   clientId: z.string().optional(),
@@ -105,10 +111,33 @@ export function ProjectDialog({
 
   const onSubmit = async (values: ProjectFormValues) => {
     try {
+      // Convert empty strings to undefined so keys are removed from payload
+      // This plays nicer with NestJS validation pipes and Prisma
+      const formattedValues = Object.entries(values).reduce(
+        (acc, [key, value]) => {
+          if (value === "") {
+            acc[key as keyof ProjectFormValues] = undefined;
+          } else if (
+            (key === "startDate" || key === "endDate") &&
+            typeof value === "string"
+          ) {
+            // Prisma requires full ISO string
+            acc[key as keyof ProjectFormValues] = new Date(value).toISOString();
+          } else {
+            acc[key as keyof ProjectFormValues] = value as any;
+          }
+          return acc;
+        },
+        {} as any,
+      );
+
       if (project) {
-        await updateProject.mutateAsync({ id: project.id, data: values });
+        await updateProject.mutateAsync({
+          id: project.id,
+          data: formattedValues,
+        });
       } else {
-        await createProject.mutateAsync(values);
+        await createProject.mutateAsync(formattedValues);
       }
       onOpenChange(false);
     } catch (error) {
@@ -181,7 +210,7 @@ export function ProjectDialog({
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="PLANNED">Planned</SelectItem>
-                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                         <SelectItem value="COMPLETED">Completed</SelectItem>
                         <SelectItem value="ON_HOLD">On Hold</SelectItem>
                         <SelectItem value="CANCELLED">Cancelled</SelectItem>

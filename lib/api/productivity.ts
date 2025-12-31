@@ -26,11 +26,11 @@ export interface ProductivityFilter {
 
 export const productivityApi = {
   getMyProductivity: (params?: ProductivityFilter) =>
-    apiClient.get<EmployeeProductivity>("/productivity/my", { params }),
+    apiClient.get<{ data: EmployeeProductivity }>("/productivity/my", { params }),
   getOverview: () =>
-    apiClient.get<GlobalProductivityItem[]>("/productivity/overview"),
+    apiClient.get<{ data: GlobalProductivityItem[] }>("/productivity/overview"),
   getEmployeeProductivity: (id: string, params?: ProductivityFilter) =>
-    apiClient.get<EmployeeProductivity>(`/productivity/employee/${id}`, {
+    apiClient.get<{ data: EmployeeProductivity }>(`/productivity/employee/${id}`, {
       params,
     }),
 };

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { memo } from "react";
+import { isValidElement, memo } from "react";
 
 const MenuItem = ({ icon: Icon, title, href }: NavItem) => {
   const pathName = usePathname();
@@ -35,7 +35,13 @@ const MenuItem = ({ icon: Icon, title, href }: NavItem) => {
           active ? "bg-white/20" : "bg-zinc-100 dark:bg-zinc-800",
         )}
       >
-        {typeof Icon === "function" ? <Icon className="h-4 w-4" /> : Icon}
+        {Icon &&
+          (isValidElement(Icon) ? (
+            Icon
+          ) : (
+            // @ts-ignore
+            <Icon className="h-4 w-4" />
+          ))}
       </div>
       <span className="truncate">{title}</span>
     </Link>
