@@ -1,11 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { authApi } from "@/lib/api/auth";
-import { useRouter } from "next/navigation";
-import type { Route } from "next";
-import { toast } from "sonner";
 import { ApiError } from "@/lib/api-client";
+import { authApi } from "@/lib/api/auth";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // Auth Hooks
 export const useLogin = () => {
@@ -24,18 +24,6 @@ export const useLogin = () => {
       // Handle redirect from backend (for 2FA or email verification)
       if (response.data.redirect) {
         router.push(response.data.redirect as Route);
-      } else {
-        // Get user data to determine redirect
-        const userData = response.data.user || (response.data as any);
-        const roles = userData.roles || [];
-
-        // Redirect based on role
-        // Admins go to admin dashboard, all others go to unified dashboard
-        if (roles.includes('SUPER_ADMIN') || roles.includes('ADMIN')) {
-          router.push("/admin/dashboard");
-        } else {
-          router.push("/dashboard" as Route);
-        }
       }
     },
     onError: (error: ApiError) => {
@@ -60,8 +48,6 @@ export const useRegister = () => {
       // Handle redirect from backend
       if (response.data.redirect) {
         router.push(response.data.redirect as Route);
-      } else {
-        router.push("/admin/dashboard");
       }
     },
     onError: (error: ApiError) => {
@@ -95,7 +81,7 @@ export const useLogout = () => {
 export const useProfile = () => {
   return useQuery({
     queryKey: ["auth", "profile"],
-    queryFn: () => authApi.getProfile().then(res => res.data),
+    queryFn: () => authApi.getProfile().then((res) => res.data),
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

@@ -258,7 +258,7 @@ export default function DashboardPage() {
                         icon: LuUsers,
                         description: "Registered accounts",
                         color: "text-blue-600 dark:text-blue-400",
-                        href: "/admin/dashboard/users",
+                        href: "/dashboard/admin/users",
                         trend: { value: 12, isPositive: true }
                     },
                     {
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                         icon: LuFileText,
                         description: "Published & drafts",
                         color: "text-purple-600 dark:text-purple-400",
-                        href: "/admin/dashboard/blogs",
+                        href: "/dashboard/admin/blogs",
                     },
                     {
                         title: "Pending Comments",

@@ -107,7 +107,7 @@ export default function VerifyEmailForm() {
       const result = await response.json();
       if (response.ok && (result.status || result.success)) {
         toast.success(result.message || "Success");
-        router.replace("/admin/dashboard");
+        router.replace("/dashboard");
         return;
       }
       toast.error(result.message || result.error || "Failed");

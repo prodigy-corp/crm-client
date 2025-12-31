@@ -1,14 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useTransition } from "react";
-import {
-  LuChevronDown,
-  LuLayoutGrid,
-  LuLogOut,
-  LuSettings,
-  LuUserRound,
-} from "react-icons/lu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -19,12 +10,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown";
 import { logout } from "@/lib/actions/auth";
-import type { SessionUser } from "@/lib/getSession";
 import { cn } from "@/lib/utils";
 import { Route } from "next";
+import Link from "next/link";
+import { useTransition } from "react";
+import {
+  LuChevronDown,
+  LuLayoutGrid,
+  LuLogOut,
+  LuUserRound,
+} from "react-icons/lu";
 
 interface ProfileDropdownProps {
-  user?: SessionUser | null;
+  user?: any | null;
 }
 
 const ProfileDropdown = ({ user }: ProfileDropdownProps) => {
@@ -49,63 +47,79 @@ const ProfileDropdown = ({ user }: ProfileDropdownProps) => {
   }
 
   // Get user initials for avatar fallback
-  const initials = user.name
-    ?.split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "U";
-
-  const isAdmin = user.roles?.includes("ADMIN");
+  const initials =
+    user.name
+      ?.split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
           buttonVariants({ variant: "ghost" }),
-          "h-auto gap-2 p-0 hover:bg-transparent",
+          "h-auto gap-2 p-0 outline-none hover:bg-transparent focus:outline-none",
         )}
       >
         <Avatar className="size-8">
-          <AvatarImage src={user.avatar || ""} alt={user.name} />
-          <AvatarFallback>{initials}</AvatarFallback>
+          <AvatarImage src={user.avatar || user.image || ""} alt={user.name} />
+          <AvatarFallback className="bg-primary/10 font-bold text-primary">
+            {initials}
+          </AvatarFallback>
         </Avatar>
-        <span className="max-w-40 truncate text-sm font-medium">
+        <span className="hidden max-w-40 truncate text-sm font-medium md:block">
           {user.name}
         </span>
         <LuChevronDown className="size-4 opacity-70" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <div className="flex items-center gap-2 p-2">
-          <Avatar className="size-10">
-            <AvatarImage src={user.avatar || ""} alt={user.name} />
-            <AvatarFallback>{initials}</AvatarFallback>
+      <DropdownMenuContent
+        align="end"
+        className="w-64 border-zinc-200 p-2 shadow-lg dark:border-zinc-800"
+      >
+        <div className="mb-2 flex items-center gap-3 p-2">
+          <Avatar className="size-10 border border-zinc-100 dark:border-zinc-800">
+            <AvatarImage
+              src={user.avatar || user.image || ""}
+              alt={user.name}
+            />
+            <AvatarFallback className="bg-primary/10 font-bold text-primary">
+              {initials}
+            </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">
+          <div className="flex flex-col space-y-0.5">
+            <p className="text-sm leading-none font-semibold">{user.name}</p>
+            <p className="max-w-[150px] truncate text-[10px] leading-tight text-muted-foreground">
               {user.email}
             </p>
           </div>
         </div>
-        <DropdownMenuSeparator />
-        {isAdmin && (
-          <DropdownMenuItem asChild>
-            <Link href={"/dashboard" as Route}>
-              <LuLayoutGrid className="size-4 opacity-70" aria-hidden="true" />
-              <span>Dashboard</span>
-            </Link>
-          </DropdownMenuItem>
-        )}
-        
-        <DropdownMenuItem asChild>
-          <Link href={"/admin/dashboard"}>
-            <LuSettings className="size-4 opacity-70" aria-hidden="true" />
-            <span>Admin Dashboard</span>
+        <DropdownMenuSeparator className="mx- -2" />
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link
+            href={"/dashboard" as Route}
+            className="flex items-center gap-2"
+          >
+            <LuLayoutGrid className="size-4 opacity-70" aria-hidden="true" />
+            <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} disabled={isPending}>
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link
+            href={"/dashboard/profile" as Route}
+            className="flex items-center gap-2"
+          >
+            <LuUserRound className="size-4 opacity-70" aria-hidden="true" />
+            <span>Profile Settings</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="mx- -2" />
+        <DropdownMenuItem
+          onClick={handleLogout}
+          disabled={isPending}
+          className="cursor-pointer text-rose-600 focus:text-rose-600"
+        >
           <LuLogOut className="size-4 opacity-70" aria-hidden="true" />
           <span>{isPending ? "Logging out..." : "Logout"}</span>
         </DropdownMenuItem>
