@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminEmployee, EmployeeStatus } from "@/lib/api/admin";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -8,17 +8,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AdminEmployee, EmployeeStatus } from "@/lib/api/admin";
 import { formatDistanceToNow } from "date-fns";
 import {
-  LuCalendar,
-  LuPhone,
-  LuMail,
-  LuUser,
-  LuBriefcase,
-  LuDollarSign,
-} from "react-icons/lu";
+  Briefcase,
+  Calendar,
+  DollarSign,
+  Mail,
+  Phone,
+  User,
+} from "lucide-react";
 
 interface ViewEmployeeDialogProps {
   employee: AdminEmployee | null;
@@ -28,19 +28,12 @@ interface ViewEmployeeDialogProps {
 
 const getStatusBadge = (status: EmployeeStatus) => {
   const variants: Record<EmployeeStatus, string> = {
-    ACTIVE:
-      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-    INACTIVE:
-      "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
-    RESIGNED:
-      "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+    ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    INACTIVE: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+    RESIGNED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   };
 
-  return (
-    <Badge className={variants[status]}>
-      {status.toLowerCase()}
-    </Badge>
-  );
+  return <Badge className={variants[status]}>{status.toLowerCase()}</Badge>;
 };
 
 export function ViewEmployeeDialog({
@@ -52,7 +45,7 @@ export function ViewEmployeeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Employee Details</DialogTitle>
           <DialogDescription>
@@ -77,7 +70,9 @@ export function ViewEmployeeDialog({
                 ID: <span className="font-mono">{employee.id}</span>
                 {employee.employeeCode && (
                   <>
-                    {" "}| Code: <span className="font-mono">{employee.employeeCode}</span>
+                    {" "}
+                    | Code:{" "}
+                    <span className="font-mono">{employee.employeeCode}</span>
                   </>
                 )}
               </div>
@@ -88,20 +83,20 @@ export function ViewEmployeeDialog({
 
           <div className="space-y-3">
             <h4 className="flex items-center gap-2 text-sm font-semibold">
-              <LuUser className="h-4 w-4" />
+              <User className="h-4 w-4" />
               Contact Information
             </h4>
             <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
               {employee.mobileNumber && (
                 <div className="flex items-center gap-2">
-                  <LuPhone className="h-4 w-4 text-muted-foreground" />
+                  <Phone className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Mobile:</span>
                   <span className="font-medium">{employee.mobileNumber}</span>
                 </div>
               )}
               {employee.emailAddress && (
                 <div className="flex items-center gap-2">
-                  <LuMail className="h-4 w-4 text-muted-foreground" />
+                  <Mail className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Email:</span>
                   <span className="font-medium">{employee.emailAddress}</span>
                 </div>
@@ -113,12 +108,12 @@ export function ViewEmployeeDialog({
 
           <div className="space-y-3">
             <h4 className="flex items-center gap-2 text-sm font-semibold">
-              <LuBriefcase className="h-4 w-4" />
+              <Briefcase className="h-4 w-4" />
               Job Information
             </h4>
             <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
               <div className="flex items-center gap-2">
-                <LuCalendar className="h-4 w-4 text-muted-foreground" />
+                <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Joined:</span>
                 <span className="font-medium">
                   {formatDistanceToNow(new Date(employee.joiningDate), {
@@ -128,7 +123,7 @@ export function ViewEmployeeDialog({
               </div>
               {employee.resignDate && (
                 <div className="flex items-center gap-2">
-                  <LuCalendar className="h-4 w-4 text-muted-foreground" />
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Resigned:</span>
                   <span className="font-medium">
                     {formatDistanceToNow(new Date(employee.resignDate), {
@@ -138,7 +133,7 @@ export function ViewEmployeeDialog({
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <LuDollarSign className="h-4 w-4 text-muted-foreground" />
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Base Salary:</span>
                 <span className="font-medium">
                   {employee.baseSalary.toLocaleString()}
@@ -151,7 +146,7 @@ export function ViewEmployeeDialog({
 
           <div className="grid grid-cols-1 gap-3 text-xs text-muted-foreground md:grid-cols-2">
             <div>
-              Created: {" "}
+              Created:{" "}
               <span className="font-medium">
                 {formatDistanceToNow(new Date(employee.createdAt), {
                   addSuffix: true,
@@ -160,7 +155,7 @@ export function ViewEmployeeDialog({
             </div>
             {employee.updatedAt && (
               <div>
-                Last Updated: {" "}
+                Last Updated:{" "}
                 <span className="font-medium">
                   {formatDistanceToNow(new Date(employee.updatedAt), {
                     addSuffix: true,
