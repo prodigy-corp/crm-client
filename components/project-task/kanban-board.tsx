@@ -25,9 +25,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
+import { Route } from "next";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { LuCalendar, LuMoreVertical, LuPlus, LuUser } from "react-icons/lu";
+import { LuCalendar, LuMoveVertical, LuPlus, LuUser } from "react-icons/lu";
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -230,13 +231,13 @@ const TaskCard = ({
             size="icon"
             className="h-6 w-6 opacity-0 group-hover:opacity-100"
           >
-            <LuMoreVertical className="h-3 w-3" />
+            <LuMoveVertical className="h-3 w-3" />
           </Button>
         </div>
 
         <div>
           <Link
-            href={`/dashboard/tasks/${task.id}`}
+            href={`/dashboard/tasks/${task.id}` as Route}
             className="line-clamp-2 text-sm font-semibold transition-colors hover:text-primary"
             onPointerDown={(e) => e.stopPropagation()}
           >

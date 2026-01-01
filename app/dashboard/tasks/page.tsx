@@ -40,9 +40,11 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { Route } from "next";
 import Link from "next/link";
 import { useState } from "react";
-import { LuBarChart, LuLayoutDashboard, LuList } from "react-icons/lu";
+import { LuArmchair, LuLayoutDashboard, LuList } from "react-icons/lu";
+import { TaskDialog } from "./_components/task-dialog";
 
 export default function TasksPage() {
   const { user } = useAuth();
@@ -190,7 +192,7 @@ export default function TasksPage() {
               <LuLayoutDashboard className="h-4 w-4" /> Kanban
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <LuBarChart className="h-4 w-4" /> Analytics
+              <LuArmchair className="h-4 w-4" /> Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -245,7 +247,7 @@ export default function TasksPage() {
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-3">
                           <h4 className="font-bold text-gray-900 transition-colors group-hover:text-primary dark:text-gray-100">
-                            <Link href={`/dashboard/tasks/${task.id}`}>
+                            <Link href={`/dashboard/tasks/${task.id}` as Route}>
                               {task.title}
                             </Link>
                           </h4>

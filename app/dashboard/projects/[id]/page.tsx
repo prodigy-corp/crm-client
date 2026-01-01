@@ -16,16 +16,17 @@ import {
 } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { format } from "date-fns";
+import {
+  Briefcase,
+  Calendar,
+  CheckCircle2,
+  FileText,
+  ListTodo,
+  User,
+} from "lucide-react";
+import { Route } from "next";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  LuBriefcase,
-  LuCalendar,
-  LuCheckCircle2,
-  LuFileText,
-  LuListTodo,
-  LuUser,
-} from "react-icons/lu";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -103,16 +104,16 @@ export default function ProjectDetailPage() {
           <Tabs defaultValue="tasks" className="w-full">
             <TabsList className="mb-6 grid w-full grid-cols-3">
               <TabsTrigger value="tasks" className="flex items-center gap-2">
-                <LuListTodo className="h-4 w-4" /> Tasks
+                <ListTodo className="h-4 w-4" /> Tasks
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"
                 className="flex items-center gap-2"
               >
-                <LuFileText className="h-4 w-4" /> Analytics
+                <FileText className="h-4 w-4" /> Analytics
               </TabsTrigger>
               <TabsTrigger value="details" className="flex items-center gap-2">
-                <LuBriefcase className="h-4 w-4" /> Details
+                <Briefcase className="h-4 w-4" /> Details
               </TabsTrigger>
             </TabsList>
 
@@ -146,21 +147,23 @@ export default function ProjectDetailPage() {
                                   : "bg-muted text-muted-foreground"
                               }`}
                             >
-                              <LuCheckCircle2 className="h-5 w-5" />
+                              <CheckCircle2 className="h-5 w-5" />
                             </div>
                             <div>
                               <h4 className="font-medium transition-colors group-hover:text-primary">
-                                <Link href={`/dashboard/tasks/${task.id}`}>
+                                <Link
+                                  href={`/dashboard/tasks/${task.id}` as Route}
+                                >
                                   {task.title}
                                 </Link>
                               </h4>
                               <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
-                                  <LuUser className="h-3 w-3" />{" "}
+                                  <User className="h-3 w-3" />{" "}
                                   {task.assignee?.name || "Unassigned"}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <LuCalendar className="h-3 w-3" />{" "}
+                                  <Calendar className="h-3 w-3" />{" "}
                                   {task.dueDate
                                     ? format(new Date(task.dueDate), "MMM dd")
                                     : "No due date"}
@@ -239,7 +242,7 @@ export default function ProjectDetailPage() {
                         Manager
                       </span>
                       <div className="flex items-center gap-2">
-                        <LuUser className="h-4 w-4 text-primary" />
+                        <User className="h-4 w-4 text-primary" />
                         <span className="font-medium">
                           {project.manager?.name || "N/A"}
                         </span>

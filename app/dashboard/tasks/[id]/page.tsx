@@ -5,6 +5,7 @@ import { TimeTracking } from "@/components/project-task/time-tracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -17,7 +18,7 @@ import {
 import { format } from "date-fns";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { LuAlertCircle, LuClock, LuUser } from "react-icons/lu";
+import { LuClock, LuLoaderCircle, LuUser } from "react-icons/lu";
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -115,7 +116,7 @@ export default function TaskDetailPage() {
                 <LuClock className="h-4 w-4" /> Time Tracking
               </TabsTrigger>
               <TabsTrigger value="details" className="flex items-center gap-2">
-                <LuAlertCircle className="h-4 w-4" /> Attributes
+                <LuLoaderCircle className="h-4 w-4" /> Attributes
               </TabsTrigger>
             </TabsList>
 

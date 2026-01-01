@@ -63,7 +63,17 @@ export const useUpdateProject = () => {
 };
 
 export const useDeleteProject = () => {
-  // ... existing useDeleteProject code
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => projectsApi.deleteProject(id),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: projectKeys.all });
+      toast.success(res.data.message || "Project deleted successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Failed to delete project");
+    },
+  });
 };
 
 export const useProjectDashboardStats = () => {

@@ -65,7 +65,17 @@ export const useUpdateTask = () => {
 };
 
 export const useDeleteTask = () => {
-  // ... existing useDeleteTask code
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tasksApi.deleteTask(id),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success(res.data.message || "Task deleted successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Failed to delete task");
+    },
+  });
 };
 
 export const useTaskAnalytics = (params?: TaskQueryParams) => {

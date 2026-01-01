@@ -19,20 +19,20 @@ import {
 } from "@/hooks/use-employee";
 import { isEmployee } from "@/lib/permissions";
 import { format } from "date-fns";
-import { useState } from "react";
 import {
-  LuBox,
-  LuBriefcase,
-  LuCalendar,
-  LuCreditCard,
-  LuLaptop,
-  LuMail,
-  LuPhone,
-  LuSave,
-  LuSmartphone,
-  LuUpload,
-  LuUser,
-} from "react-icons/lu";
+  Box,
+  Briefcase,
+  Calendar,
+  CreditCard,
+  Laptop,
+  Mail,
+  Phone,
+  Save,
+  Smartphone,
+  Upload,
+  User,
+} from "lucide-react";
+import { useState } from "react";
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -119,21 +119,21 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label>Full Name</Label>
                 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                  <LuUser className="h-4 w-4 text-gray-500" />
+                  <User className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">{user?.name || "N/A"}</span>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
                 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                  <LuMail className="h-4 w-4 text-gray-500" />
+                  <Mail className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">{user?.email || "N/A"}</span>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>
                 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                  <LuBriefcase className="h-4 w-4 text-gray-500" />
+                  <Briefcase className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">
                     {user?.roles?.join(", ") || "N/A"}
                   </span>
@@ -162,7 +162,7 @@ export default function ProfilePage() {
         </div>
         {!isEditing ? (
           <Button onClick={handleEdit}>
-            <LuUser className="mr-2 h-4 w-4" />
+            <User className="mr-2 h-4 w-4" />
             Edit Profile
           </Button>
         ) : (
@@ -171,7 +171,7 @@ export default function ProfilePage() {
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={updateProfile.isPending}>
-              <LuSave className="mr-2 h-4 w-4" />
+              <Save className="mr-2 h-4 w-4" />
               {updateProfile.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
@@ -201,7 +201,7 @@ export default function ProfilePage() {
             </div>
             <Label htmlFor="photo-upload" className="cursor-pointer">
               <div className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">
-                <LuUpload className="h-4 w-4" />
+                <Upload className="h-4 w-4" />
                 Upload Photo
               </div>
               <input
@@ -231,7 +231,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                  <LuUser className="h-4 w-4 text-gray-500" />
+                  <User className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">{employee?.name || "N/A"}</span>
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                  <LuMail className="h-4 w-4 text-gray-500" />
+                  <Mail className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">
                     {employee?.user?.email || "N/A"}
                   </span>
@@ -260,7 +260,7 @@ export default function ProfilePage() {
                   />
                 ) : (
                   <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                    <LuPhone className="h-4 w-4 text-gray-500" />
+                    <Phone className="h-4 w-4 text-gray-500" />
                     <span className="text-sm">
                       {employee?.mobileNumber || "N/A"}
                     </span>
@@ -286,7 +286,7 @@ export default function ProfilePage() {
                   />
                 ) : (
                   <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                    <LuPhone className="h-4 w-4 text-gray-500" />
+                    <Phone className="h-4 w-4 text-gray-500" />
                     <span className="text-sm">
                       {employee?.alternativeContactNumber || "N/A"}
                     </span>
@@ -312,7 +312,7 @@ export default function ProfilePage() {
                   />
                 ) : (
                   <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                    <LuPhone className="h-4 w-4 text-gray-500" />
+                    <Phone className="h-4 w-4 text-gray-500" />
                     <span className="text-sm">
                       {employee?.emergencyContactNumber || "N/A"}
                     </span>
@@ -336,7 +336,7 @@ export default function ProfilePage() {
                   />
                 ) : (
                   <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                    <LuUser className="h-4 w-4 text-gray-500" />
+                    <User className="h-4 w-4 text-gray-500" />
                     <span className="text-sm break-all">
                       {employee?.facebookProfileLink || "N/A"}
                     </span>
@@ -362,7 +362,7 @@ export default function ProfilePage() {
                 Employee Code
               </Label>
               <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                <LuBriefcase className="h-4 w-4 text-gray-500" />
+                <Briefcase className="h-4 w-4 text-gray-500" />
                 <span className="font-semibold">
                   {employee?.employeeCode || "N/A"}
                 </span>
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                 Designation
               </Label>
               <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                <LuBriefcase className="h-4 w-4 text-gray-500" />
+                <Briefcase className="h-4 w-4 text-gray-500" />
                 <span className="font-semibold">
                   {employee?.designation || "N/A"}
                 </span>
@@ -388,7 +388,7 @@ export default function ProfilePage() {
                 National ID
               </Label>
               <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                <LuUser className="h-4 w-4 text-gray-500" />
+                <User className="h-4 w-4 text-gray-500" />
                 <span className="font-semibold">
                   {employee?.nationalId || "N/A"}
                 </span>
@@ -401,7 +401,7 @@ export default function ProfilePage() {
                 Join Date
               </Label>
               <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                <LuCalendar className="h-4 w-4 text-gray-500" />
+                <Calendar className="h-4 w-4 text-gray-500" />
                 <span className="font-semibold">
                   {employee?.joiningDate
                     ? format(new Date(employee.joiningDate), "MMM d, yyyy")
@@ -451,11 +451,11 @@ function AssignedAssetsCard({ employeeId }: { employeeId?: string }) {
 
   const getIcon = (type: string) => {
     const t = type.toLowerCase();
-    if (t.includes("laptop")) return <LuLaptop className="h-5 w-5" />;
-    if (t.includes("phone")) return <LuSmartphone className="h-5 w-5" />;
+    if (t.includes("laptop")) return <Laptop className="h-5 w-5" />;
+    if (t.includes("phone")) return <Smartphone className="h-5 w-5" />;
     if (t.includes("card") || t.includes("id"))
-      return <LuCreditCard className="h-5 w-5" />;
-    return <LuBox className="h-5 w-5" />;
+      return <CreditCard className="h-5 w-5" />;
+    return <Box className="h-5 w-5" />;
   };
 
   return (
@@ -495,7 +495,7 @@ function AssignedAssetsCard({ employeeId }: { employeeId?: string }) {
           </div>
         ) : (
           <div className="rounded-lg border-2 border-dashed bg-muted/30 py-8 text-center">
-            <LuBox className="mx-auto h-12 w-12 text-muted-foreground opacity-20" />
+            <Box className="mx-auto h-12 w-12 text-muted-foreground opacity-20" />
             <p className="mt-2 text-sm font-medium text-muted-foreground">
               No assets assigned yet.
             </p>
