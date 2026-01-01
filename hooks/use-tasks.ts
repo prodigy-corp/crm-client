@@ -65,15 +65,70 @@ export const useUpdateTask = () => {
 };
 
 export const useDeleteTask = () => {
+  // ... existing useDeleteTask code
+};
+
+export const useTaskAnalytics = (params?: TaskQueryParams) => {
+  return useQuery({
+    queryKey: [...taskKeys.all, "analytics", params],
+    queryFn: () => tasksApi.getTaskAnalytics(params),
+    select: (data) => data.data.data,
+  });
+};
+
+export const useTaskComments = (id: string) => {
+  return useQuery({
+    queryKey: [...taskKeys.detail(id), "comments"],
+    queryFn: () => tasksApi.getTaskComments(id),
+    select: (data) => data.data.data,
+    enabled: !!id,
+  });
+};
+
+export const useAddTaskComment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => tasksApi.deleteTask(id),
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      toast.success(res.data.message || "Task deleted successfully");
+    mutationFn: ({ id, content }: { id: string; content: string }) =>
+      tasksApi.addTaskComment(id, content),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...taskKeys.detail(variables.id), "comments"],
+      });
+      toast.success("Comment added successfully");
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete task");
+      toast.error(err.response?.data?.message || "Failed to add comment");
+    },
+  });
+};
+
+export const useTaskTimeLogs = (id: string) => {
+  return useQuery({
+    queryKey: [...taskKeys.detail(id), "time-logs"],
+    queryFn: () => tasksApi.getTaskTimeLogs(id),
+    select: (data) => data.data.data,
+    enabled: !!id,
+  });
+};
+
+export const useAddTaskTimeLog = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { hours: number; description?: string; logDate?: string };
+    }) => tasksApi.addTaskTimeLog(id, data),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...taskKeys.detail(variables.id), "time-logs"],
+      });
+      toast.success("Time log added successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Failed to add time log");
     },
   });
 };

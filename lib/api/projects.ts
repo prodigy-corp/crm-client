@@ -7,6 +7,9 @@ export interface Project {
   status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "ON_HOLD" | "CANCELLED";
   startDate?: string;
   endDate?: string;
+  budget?: number;
+  actualCost: number;
+  progress: number;
   clientId?: string;
   managerId?: string;
   createdAt: string;
@@ -37,6 +40,37 @@ export interface CreateProjectDto {
 
 export interface UpdateProjectDto extends Partial<CreateProjectDto> {}
 
+export interface ProjectAnalytics {
+  projectName: string;
+  totalTasks: number;
+  completedTasks: number;
+  progress: number;
+  taskStatusBreakdown: { status: string; _count: number }[];
+  taskPriorityBreakdown: { priority: string; _count: number }[];
+  budget?: number;
+  actualCost: number;
+}
+
+export interface ProjectComment {
+  id: string;
+  projectId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface ProjectDashboardStats {
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  statusBreakdown: { status: string; _count: number }[];
+}
+
 export const projectsApi = {
   getProjects: () => apiClient.get<{ data: Project[] }>("/projects"),
   getProject: (id: string) =>
@@ -50,4 +84,14 @@ export const projectsApi = {
     ),
   deleteProject: (id: string) =>
     apiClient.delete<{ message: string }>(`/projects/${id}` as any),
+  getDashboardStats: () =>
+    apiClient.get<{ data: ProjectDashboardStats }>("/projects/dashboard/stats"),
+  getProjectAnalytics: (id: string) =>
+    apiClient.get<{ data: ProjectAnalytics }>(`/projects/${id}/analytics`),
+  getProjectComments: (id: string) =>
+    apiClient.get<{ data: ProjectComment[] }>(`/projects/${id}/comments`),
+  addProjectComment: (id: string, content: string) =>
+    apiClient.post<{ data: ProjectComment }>(`/projects/${id}/comments`, {
+      content,
+    }),
 };

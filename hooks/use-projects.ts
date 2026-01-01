@@ -63,15 +63,48 @@ export const useUpdateProject = () => {
 };
 
 export const useDeleteProject = () => {
+  // ... existing useDeleteProject code
+};
+
+export const useProjectDashboardStats = () => {
+  return useQuery({
+    queryKey: [...projectKeys.all, "dashboard-stats"],
+    queryFn: () => projectsApi.getDashboardStats(),
+    select: (data) => data.data.data,
+  });
+};
+
+export const useProjectAnalytics = (id: string) => {
+  return useQuery({
+    queryKey: [...projectKeys.detail(id), "analytics"],
+    queryFn: () => projectsApi.getProjectAnalytics(id),
+    select: (data) => data.data.data,
+    enabled: !!id,
+  });
+};
+
+export const useProjectComments = (id: string) => {
+  return useQuery({
+    queryKey: [...projectKeys.detail(id), "comments"],
+    queryFn: () => projectsApi.getProjectComments(id),
+    select: (data) => data.data.data,
+    enabled: !!id,
+  });
+};
+
+export const useAddProjectComment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => projectsApi.deleteProject(id),
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: projectKeys.all });
-      toast.success(res.data.message || "Project deleted successfully");
+    mutationFn: ({ id, content }: { id: string; content: string }) =>
+      projectsApi.addProjectComment(id, content),
+    onSuccess: (res, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...projectKeys.detail(variables.id), "comments"],
+      });
+      toast.success("Comment added successfully");
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete project");
+      toast.error(err.response?.data?.message || "Failed to add comment");
     },
   });
 };

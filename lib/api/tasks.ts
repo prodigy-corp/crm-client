@@ -7,6 +7,7 @@ export interface Task {
   status: "TODO" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   dueDate?: string;
+  estimatedHours?: number;
   projectId?: string;
   assigneeId?: string;
   creatorId: string;
@@ -44,6 +45,41 @@ export interface TaskQueryParams {
   status?: Task["status"];
 }
 
+export interface TaskAnalytics {
+  totalTasks: number;
+  completedTasks: number;
+  todoTasks: number;
+  inProgressTasks: number;
+  priorityBreakdown: { priority: string; _count: number }[];
+  completionRate: number;
+}
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface TaskTimeLog {
+  id: string;
+  taskId: string;
+  userId: string;
+  hours: number;
+  description?: string;
+  logDate: string;
+  user: {
+    id: string;
+    name: string;
+  };
+}
+
 export const tasksApi = {
   getTasks: (params?: TaskQueryParams) =>
     apiClient.get<{ data: Task[] }>("/tasks", { params }),
@@ -54,4 +90,18 @@ export const tasksApi = {
     apiClient.patch<{ message: string; data: Task }>(`/tasks/${id}`, data),
   deleteTask: (id: string) =>
     apiClient.delete<{ message: string }>(`/tasks/${id}` as any),
+  getTaskAnalytics: (params?: TaskQueryParams) =>
+    apiClient.get<{ data: TaskAnalytics }>("/tasks/analytics/summary", {
+      params,
+    }),
+  getTaskComments: (id: string) =>
+    apiClient.get<{ data: TaskComment[] }>(`/tasks/${id}/comments`),
+  addTaskComment: (id: string, content: string) =>
+    apiClient.post<{ data: TaskComment }>(`/tasks/${id}/comments`, { content }),
+  getTaskTimeLogs: (id: string) =>
+    apiClient.get<{ data: TaskTimeLog[] }>(`/tasks/${id}/time-logs`),
+  addTaskTimeLog: (
+    id: string,
+    data: { hours: number; description?: string; logDate?: string },
+  ) => apiClient.post<{ data: TaskTimeLog }>(`/tasks/${id}/time-logs`, data),
 };
