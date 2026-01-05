@@ -9,7 +9,7 @@ import { MessageRoom } from "@/lib/api/messages";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
-import { LuMessageCircle, LuSearch } from "react-icons/lu";
+import { LuMessageCircle, LuSearch, LuUsers } from "react-icons/lu";
 
 interface MessageSidebarProps {
   selectedRoomId: string | null;
@@ -140,9 +140,20 @@ export function MessageSidebar({
         ) : (
           <div className="p-2">
             {rooms.map((room) => {
-              const otherUser =
-                room.otherUser ||
-                (room.senderId === currentUserId ? room.receiver : room.sender);
+              const isGroup = room.isGroup;
+              const displayName = isGroup
+                ? room.name
+                : room.otherUser?.name ||
+                  (room.senderId === currentUserId
+                    ? room.receiver?.name
+                    : room.sender?.name) ||
+                  "Unknown User";
+              const displayAvatar = isGroup
+                ? room.avatar
+                : room.otherUser?.avatar ||
+                  (room.senderId === currentUserId
+                    ? room.receiver?.avatar
+                    : room.sender?.avatar);
               const isSelected = selectedRoomId === room.id;
               const hasUnread = room.unreadCount && room.unreadCount > 0;
 
@@ -161,15 +172,17 @@ export function MessageSidebar({
                   <div className="relative">
                     <Avatar className="h-12 w-12 rounded-full">
                       <AvatarImage
-                        src={otherUser?.avatar}
-                        alt={otherUser?.name}
+                        src={displayAvatar}
+                        alt={displayName || "Avatar"}
                       />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {getInitials(otherUser?.name)}
+                        {isGroup ? (
+                          <LuUsers className="h-6 w-6" />
+                        ) : (
+                          getInitials(displayName)
+                        )}
                       </AvatarFallback>
                     </Avatar>
-                    {/* Online indicator - you can implement this with WebSocket */}
-                    {/* <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card bg-green-500" /> */}
                   </div>
 
                   {/* Content */}
@@ -181,7 +194,7 @@ export function MessageSidebar({
                           hasUnread ? "text-foreground" : "text-foreground",
                         )}
                       >
-                        {otherUser?.name || "Unknown User"}
+                        {displayName}
                       </span>
                       {room.lastMessage && (
                         <span className="shrink-0 text-xs text-muted-foreground">

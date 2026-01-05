@@ -27,8 +27,7 @@ import {
   useMessageRoom,
   useSendMessage,
 } from "@/hooks/use-messages";
-import { Message, MessageRoom } from "@/lib/api/messages";
-import { User } from "@/lib/dataTypes";
+import { Message, MessageRoom, User } from "@/lib/api/messages";
 import { cn } from "@/lib/utils";
 import { format, isSameDay, isToday, isYesterday } from "date-fns";
 import { MoreVertical } from "lucide-react";
@@ -37,10 +36,13 @@ import {
   LuCheck,
   LuCheckCheck,
   LuImage,
+  LuInfo,
   LuMessageCircle,
   LuSend,
   LuTrash2,
+  LuUsers,
 } from "react-icons/lu";
+import { GroupManagementDialog } from "./group-management-dialog";
 
 interface MessageAreaProps {
   roomId: string | null;
@@ -58,6 +60,7 @@ export function MessageArea({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
 
   const { data, isLoading, error } = useMessageRoom(roomId || "", !!roomId);
   const { mutate: sendMessage, isPending: isSending } = useSendMessage(
@@ -73,7 +76,7 @@ export function MessageArea({
   const roomData = useMemo(
     () =>
       data?.data as
-        | (MessageRoom & { messages: Message[]; otherUser: User })
+        | (MessageRoom & { messages: Message[]; otherUser?: User })
         | undefined,
     [data],
   );
@@ -241,30 +244,55 @@ export function MessageArea({
       <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 rounded-full">
-            <AvatarImage src={otherUser?.avatar} alt={otherUser?.name} />
+            <AvatarImage
+              src={roomData?.isGroup ? roomData.avatar : otherUser?.avatar}
+              alt={roomData?.isGroup ? roomData.name : otherUser?.name}
+            />
             <AvatarFallback className="bg-primary/10 text-primary">
-              {getInitials(otherUser?.name)}
+              {roomData?.isGroup ? (
+                <LuUsers className="h-5 w-5" />
+              ) : (
+                getInitials(otherUser?.name)
+              )}
             </AvatarFallback>
           </Avatar>
           <div>
             <h3 className="font-semibold text-foreground">
-              {otherUser?.name || "Unknown User"}
+              {roomData?.isGroup
+                ? roomData.name
+                : otherUser?.name || "Unknown User"}
             </h3>
+            {roomData?.isGroup && (
+              <p className="text-xs text-muted-foreground">
+                {roomData.members?.length} members
+              </p>
+            )}
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-5 w-5" />
+        <div className="flex items-center gap-1">
+          {roomData?.isGroup && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsGroupDialogOpen(true)}
+            >
+              <LuInfo className="h-5 w-5" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="text-destructive">
-              <LuTrash2 className="mr-2 h-4 w-4" />
-              Delete Conversation
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem className="text-destructive">
+                <LuTrash2 className="mr-2 h-4 w-4" />
+                Delete {roomData?.isGroup ? "Group" : "Conversation"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Messages Area */}
@@ -299,9 +327,14 @@ export function MessageArea({
                   >
                     {!isOwn && (
                       <Avatar className="h-7 w-7 rounded-full">
-                        <AvatarImage src={otherUser?.avatar} />
-                        <AvatarFallback className="bg-primary/10 text-xs text-primary">
-                          {getInitials(otherUser?.name)}
+                        <AvatarImage
+                          src={
+                            msg.sender?.avatar ||
+                            (isOwn ? undefined : otherUser?.avatar)
+                          }
+                        />
+                        <AvatarFallback className="bg-primary/10 text-[10px] text-primary">
+                          {getInitials(msg.sender?.name || otherUser?.name)}
                         </AvatarFallback>
                       </Avatar>
                     )}
@@ -314,6 +347,11 @@ export function MessageArea({
                           : "rounded-bl-md bg-card shadow-sm",
                       )}
                     >
+                      {roomData?.isGroup && !isOwn && (
+                        <p className="mb-1 text-[10px] font-semibold text-primary">
+                          {msg.sender?.name || "Unknown"}
+                        </p>
+                      )}
                       {msg.type === "IMAGE" && msg.attachment && (
                         <img
                           src={`${process.env.NEXT_PUBLIC_ASSET_URL}/${msg.attachment}`}
@@ -442,6 +480,16 @@ export function MessageArea({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Group Management Dialog */}
+      {roomData && (
+        <GroupManagementDialog
+          open={isGroupDialogOpen}
+          onOpenChange={setIsGroupDialogOpen}
+          room={roomData}
+          currentUserId={currentUserId}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -11,13 +13,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { useAvailableUsers, useInitiateMessage } from "@/hooks/use-messages";
+import {
+  useAvailableUsers,
+  useCreateGroup,
+  useInitiateMessage,
+} from "@/hooks/use-messages";
 import { User } from "@/lib/api/messages";
+import { X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { LuArrowLeft, LuCheck, LuSearch, LuSend, LuUser } from "react-icons/lu";
+import {
+  LuArrowLeft,
+  LuCheck,
+  LuSearch,
+  LuSend,
+  LuUser,
+  LuUsers,
+} from "react-icons/lu";
 
 interface NewConversationDialogProps {
   open: boolean;
@@ -25,18 +40,21 @@ interface NewConversationDialogProps {
   onConversationCreated: (roomId: string) => void;
 }
 
-type Step = "select-user" | "compose-message";
+type Step = "select-users" | "group-info" | "compose-message";
 
 export function NewConversationDialog({
   open,
   onOpenChange,
   onConversationCreated,
 }: NewConversationDialogProps) {
-  const [step, setStep] = useState<Step>("select-user");
+  const [step, setStep] = useState<Step>("select-users");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [groupName, setGroupName] = useState("");
   const [message, setMessage] = useState("");
+
+  const isGroup = selectedUsers.length > 1;
 
   // Debounced search
   const handleSearch = useCallback((value: string) => {
@@ -48,52 +66,91 @@ export function NewConversationDialog({
   }, []);
 
   const { data, isLoading } = useAvailableUsers(debouncedSearch, open);
-  const { mutate: initiateMessage, isPending } = useInitiateMessage();
+  const { mutate: initiateMessage, isPending: isInitiating } =
+    useInitiateMessage();
+  const { mutate: createGroup, isPending: isCreatingGroup } = useCreateGroup();
+
+  const isPending = isInitiating || isCreatingGroup;
 
   const users = useMemo(() => {
-    // API returns { data: users[], success: true, message: '' }
-    // React Query wraps this in data, so we access data.data
     if (!data?.data) return [];
     return Array.isArray(data.data) ? data.data : [];
   }, [data]);
 
-  const handleSelectUser = useCallback((user: User) => {
-    setSelectedUser(user);
-    setStep("compose-message");
+  const toggleUser = useCallback((user: User) => {
+    setSelectedUsers((prev) => {
+      const exists = prev.find((u) => u.id === user.id);
+      if (exists) {
+        return prev.filter((u) => u.id !== user.id);
+      } else {
+        return [...prev, user];
+      }
+    });
   }, []);
+
+  const handleNext = useCallback(() => {
+    if (selectedUsers.length === 0) return;
+    if (selectedUsers.length === 1) {
+      setStep("compose-message");
+    } else {
+      setStep("group-info");
+    }
+  }, [selectedUsers]);
 
   const handleBack = useCallback(() => {
-    setStep("select-user");
-    setMessage("");
-  }, []);
+    if (step === "compose-message" || step === "group-info") {
+      setStep("select-users");
+    }
+  }, [step]);
 
   const handleSendMessage = useCallback(() => {
-    if (!selectedUser || !message.trim()) return;
+    if (selectedUsers.length === 0) return;
 
-    initiateMessage(
-      { receiverId: selectedUser.id, message: message.trim() },
-      {
-        onSuccess: (response) => {
-          const roomId = response.data?.roomId;
-          if (roomId) {
-            onConversationCreated(roomId);
-            // Reset state
-            setStep("select-user");
-            setSelectedUser(null);
-            setMessage("");
-            setSearch("");
-          }
+    if (selectedUsers.length === 1) {
+      if (!message.trim()) return;
+      initiateMessage(
+        { receiverId: selectedUsers[0].id, message: message.trim() },
+        {
+          onSuccess: (response: any) => {
+            const roomId = response.data?.roomId;
+            if (roomId) {
+              onConversationCreated(roomId);
+              handleClose();
+            }
+          },
         },
-      },
-    );
-  }, [selectedUser, message, initiateMessage, onConversationCreated]);
+      );
+    } else {
+      if (!groupName.trim()) return;
+      createGroup(
+        { name: groupName.trim(), memberIds: selectedUsers.map((u) => u.id) },
+        {
+          onSuccess: (response) => {
+            const roomId = response.data?.id;
+            if (roomId) {
+              onConversationCreated(roomId);
+              handleClose();
+            }
+          },
+        },
+      );
+    }
+  }, [
+    selectedUsers,
+    message,
+    groupName,
+    initiateMessage,
+    createGroup,
+    onConversationCreated,
+  ]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
     // Reset state after dialog closes
     setTimeout(() => {
-      setStep("select-user");
-      setSelectedUser(null);
+      setStep("select-users");
+      setSelectedUsers([]);
+      setGroupName("");
       setMessage("");
       setSearch("");
     }, 200);
@@ -115,7 +172,7 @@ export function NewConversationDialog({
         {/* Header */}
         <DialogHeader className="border-b border-border p-4">
           <div className="flex items-center gap-3">
-            {step === "compose-message" && (
+            {step !== "select-users" && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -127,21 +184,27 @@ export function NewConversationDialog({
             )}
             <div>
               <DialogTitle>
-                {step === "select-user" ? "New Message" : "Compose Message"}
+                {step === "select-users"
+                  ? "New Message"
+                  : step === "group-info"
+                    ? "Group Details"
+                    : "Compose Message"}
               </DialogTitle>
               <DialogDescription>
-                {step === "select-user"
-                  ? "Select a user to start a conversation"
-                  : `Send a message to ${selectedUser?.name}`}
+                {step === "select-users"
+                  ? "Select users to start a conversation"
+                  : step === "group-info"
+                    ? "Set a name for your new group"
+                    : `Send a message to ${selectedUsers[0]?.name}`}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        {step === "select-user" ? (
+        {step === "select-users" ? (
           <>
-            {/* Search */}
-            <div className="border-b border-border p-4">
+            {/* Search and Selected Count */}
+            <div className="space-y-4 border-b border-border p-4">
               <div className="relative">
                 <LuSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -151,6 +214,24 @@ export function NewConversationDialog({
                   className="pl-9"
                 />
               </div>
+
+              {selectedUsers.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedUsers.map((user) => (
+                    <Badge
+                      key={user.id}
+                      variant="secondary"
+                      className="gap-1 px-2 py-1"
+                    >
+                      {user.name}
+                      <X
+                        className="h-3 w-3 cursor-pointer hover:text-destructive"
+                        onClick={() => toggleUser(user)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* User List */}
@@ -175,41 +256,102 @@ export function NewConversationDialog({
                   <p className="text-sm font-medium text-foreground">
                     {search ? "No users found" : "No users available"}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {search
-                      ? "Try a different search term"
-                      : "There are no other users to message"}
-                  </p>
                 </div>
               ) : (
                 <div className="p-2">
-                  {users.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => handleSelectUser(user)}
-                      className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted/50"
-                    >
-                      <Avatar className="h-10 w-10 rounded-full">
-                        <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-foreground">
-                          {user.name}
-                        </p>
-                        {user.email && (
-                          <p className="truncate text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
-                        )}
+                  {users.map((user) => {
+                    const isSelected = selectedUsers.some(
+                      (u) => u.id === user.id,
+                    );
+                    return (
+                      <div
+                        key={user.id}
+                        className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50"
+                      >
+                        <Checkbox
+                          id={`user-${user.id}`}
+                          checked={isSelected}
+                          onCheckedChange={() => toggleUser(user)}
+                          className="ml-2"
+                        />
+                        <Label
+                          htmlFor={`user-${user.id}`}
+                          className="flex flex-1 cursor-pointer items-center gap-3 py-1"
+                        >
+                          <Avatar className="h-10 w-10 rounded-full">
+                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {getInitials(user.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground">
+                              {user.name}
+                            </p>
+                            {user.email && (
+                              <p className="truncate text-xs text-muted-foreground">
+                                {user.email}
+                              </p>
+                            )}
+                          </div>
+                        </Label>
                       </div>
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
+
+            <DialogFooter className="border-t border-border p-4">
+              <Button
+                variant="default"
+                onClick={handleNext}
+                disabled={selectedUsers.length === 0}
+                className="w-full"
+              >
+                Next
+              </Button>
+            </DialogFooter>
+          </>
+        ) : step === "group-info" ? (
+          <>
+            <div className="space-y-4 p-6">
+              <div className="mb-4 flex flex-col items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <LuUsers className="h-10 w-10" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">New Group</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedUsers.length} members
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="groupName">Group Name</Label>
+                <Input
+                  id="groupName"
+                  placeholder="Enter group name..."
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="border-t border-border p-4">
+              <Button variant="outline" onClick={handleBack}>
+                Back
+              </Button>
+              <Button
+                onClick={handleSendMessage}
+                disabled={!groupName.trim() || isPending}
+                className="gap-2"
+              >
+                {isPending ? "Creating..." : "Create Group"}
+              </Button>
+            </DialogFooter>
           </>
         ) : (
           <>
@@ -217,20 +359,20 @@ export function NewConversationDialog({
             <div className="flex items-center gap-3 border-b border-border p-4">
               <Avatar className="h-10 w-10 rounded-full">
                 <AvatarImage
-                  src={selectedUser?.avatar}
-                  alt={selectedUser?.name}
+                  src={selectedUsers[0]?.avatar}
+                  alt={selectedUsers[0]?.name}
                 />
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(selectedUser?.name)}
+                  {getInitials(selectedUsers[0]?.name)}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-medium text-foreground">
-                  {selectedUser?.name}
+                  {selectedUsers[0]?.name}
                 </p>
-                {selectedUser?.email && (
+                {selectedUsers[0]?.email && (
                   <p className="text-sm text-muted-foreground">
-                    {selectedUser.email}
+                    {selectedUsers[0].email}
                   </p>
                 )}
               </div>

@@ -2,9 +2,12 @@
 
 import { ApiError } from "@/lib/api-client";
 import {
+  AddMembersPayload,
+  CreateGroupPayload,
   InitMessagePayload,
   messageApi,
   SendMessagePayload,
+  UpdateGroupPayload,
 } from "@/lib/api/messages";
 import {
   useInfiniteQuery,
@@ -164,6 +167,74 @@ export const useDeleteRoom = () => {
     },
     onError: (error: ApiError) => {
       toast.error(error.message || "Failed to delete conversation");
+    },
+  });
+};
+
+// Create group
+export const useCreateGroup = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateGroupPayload) =>
+      messageApi.createGroup(payload),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: messageKeys.all });
+      toast.success("Group created!");
+    },
+    onError: (error: ApiError) => {
+      toast.error(error.message || "Failed to create group");
+    },
+  });
+};
+
+// Add members
+export const useAddMembers = (roomId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AddMembersPayload) =>
+      messageApi.addMembers(roomId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: messageKeys.room(roomId) });
+      toast.success("Members added!");
+    },
+    onError: (error: ApiError) => {
+      toast.error(error.message || "Failed to add members");
+    },
+  });
+};
+
+// Remove member
+export const useRemoveMember = (roomId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => messageApi.removeMember(roomId, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: messageKeys.room(roomId) });
+      toast.success("Member removed");
+    },
+    onError: (error: ApiError) => {
+      toast.error(error.message || "Failed to remove member");
+    },
+  });
+};
+
+// Update group
+export const useUpdateGroup = (roomId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: UpdateGroupPayload) =>
+      messageApi.updateGroup(roomId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: messageKeys.room(roomId) });
+      queryClient.invalidateQueries({ queryKey: messageKeys.sidebar() });
+      toast.success("Group updated!");
+    },
+    onError: (error: ApiError) => {
+      toast.error(error.message || "Failed to update group");
     },
   });
 };

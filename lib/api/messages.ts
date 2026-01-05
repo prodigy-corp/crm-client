@@ -22,10 +22,23 @@ export interface Message {
   receiver?: User;
 }
 
+export interface RoomMember {
+  id: string;
+  roomId: string;
+  userId: string;
+  isAdmin: boolean;
+  joinedAt: string;
+  user: User;
+}
+
 export interface MessageRoom {
   id: string;
-  senderId: string;
-  receiverId: string;
+  senderId?: string;
+  receiverId?: string;
+  isGroup: boolean;
+  name?: string;
+  avatar?: string;
+  creatorId?: string;
   createdAt: string;
   updatedAt: string;
   sender?: User;
@@ -34,6 +47,8 @@ export interface MessageRoom {
   messages?: Message[];
   lastMessage?: Message | null;
   unreadCount?: number;
+  members?: RoomMember[];
+  creator?: User;
   _count?: {
     messages: number;
   };
@@ -78,6 +93,20 @@ export interface InitMessagePayload {
 export interface SendMessagePayload {
   message?: string;
   type?: "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE";
+}
+
+export interface CreateGroupPayload {
+  name: string;
+  memberIds: string[];
+}
+
+export interface AddMembersPayload {
+  memberIds: string[];
+}
+
+export interface UpdateGroupPayload {
+  name?: string;
+  avatar?: string;
 }
 
 // Message API
@@ -183,6 +212,46 @@ export const messageApi = {
   // Delete entire room
   deleteRoom: async (roomId: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete(`/messages/${roomId}`);
+    return response.data;
+  },
+
+  // Group Management
+  createGroup: async (
+    payload: CreateGroupPayload,
+  ): Promise<ApiResponse<MessageRoom>> => {
+    const response = await apiClient.post("/messages/group", payload);
+    return response.data;
+  },
+
+  addMembers: async (
+    roomId: string,
+    payload: AddMembersPayload,
+  ): Promise<ApiResponse<void>> => {
+    const response = await apiClient.post(
+      `/messages/${roomId}/members`,
+      payload,
+    );
+    return response.data;
+  },
+
+  removeMember: async (
+    roomId: string,
+    userId: string,
+  ): Promise<ApiResponse<void>> => {
+    const response = await apiClient.delete(
+      `/messages/${roomId}/members/${userId}`,
+    );
+    return response.data;
+  },
+
+  updateGroup: async (
+    roomId: string,
+    payload: UpdateGroupPayload,
+  ): Promise<ApiResponse<MessageRoom>> => {
+    const response = await apiClient.patch(
+      `/messages/${roomId}/group`,
+      payload,
+    );
     return response.data;
   },
 };
